@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>深空监测 - Zentrix Lab</title>
+    <style>
+        :root {
+            --space-bg: #050505;
+            --iss-blue: #0ea5e9;
+            --text-dim: #64748b;
+        }
+
+        body {
+            background-color: var(--space-bg);
+            color: #fff;
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 模拟雷达扫描线 */
+        body::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 2px;
+            background: rgba(14, 165, 233, 0.1);
+            animation: scan 4s linear infinite;
+        }
+
+        @keyframes scan {
+            from { top: 0; }
+            to { top: 100%; }
+        }
+
+        .radar-container {
+            border: 2px solid var(--iss-blue);
+            border-radius: 50%;
+            width: 300px;
+            height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            box-shadow: 0 0 50px rgba(14, 165, 233, 0.2);
+            margin-bottom: 40px;
+        }
+
+        .data-panel {
+            background: rgba(15, 23, 42, 0.8);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--iss-blue);
+            width: 320px;
+        }
+
+        .data-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            font-size: 0.9rem;
+        }
+
+        .label { color: var(--text-dim); }
+        .value { color: var(--iss-blue); font-weight: bold; }
+
+        .btn-home {
+            margin-top: 30px;
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 0.8rem;
+            border-bottom: 1px solid var(--text-dim);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="radar-container">
+        <div style="font-size: 0.7rem; color: var(--iss-blue); text-align: center;">
+            🛰️ ISS TRACKING...
+        </div>
+    </div>
+
+    <div class="data-panel">
+        <div class="data-item">
+            <span class="label">目标名称:</span>
+            <span class="value">Intl. Space Station</span>
+        </div>
+        <div class="data-item">
+            <span class="label">实时经度:</span>
+            <span class="value" id="lon">0.0000</span>
+        </div>
+        <div class="data-item">
+            <span class="label">实时纬度:</span>
+            <span class="value" id="lat">0.0000</span>
+        </div>
+        <div class="data-item">
+            <span class="label">同步频率:</span>
+            <span class="value">5000ms</span>
+        </div>
+    </div>
+
+    <a href="/" class="btn-home">RETURN TO BASE</a>
+
+    <script>
+        async function updateISS() {
+            try {
+                // 调取国际空间站实时坐标接口
+                const response = await fetch('http://api.open-notify.org/iss-now.json');
+                const data = await response.json();
+                
+                const { longitude, latitude } = data.iss_position;
+                
+                // 更新页面数值
+                document.getElementById('lon').innerText = parseFloat(longitude).toFixed(4);
+                document.getElementById('lat').innerText = parseFloat(latitude).toFixed(4);
+                
+                console.log("ISS Position Updated:", longitude, latitude);
+            } catch (error) {
+                console.error("Tracking Error:", error);
+            }
+        }
+
+        // 每 5 秒自动同步一次
+        setInterval(updateISS, 5000);
+        updateISS(); // 初始化执行一次
+    </script>
+</body>
+</html>
