@@ -2,36 +2,124 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>Terminal - Zentrix</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>终端模式 - Zentrix Lab</title>
     <style>
-        body { background: #000; color: #0f0; font-family: monospace; margin: 0; height: 100vh; display: flex; flex-direction: column; }
-        #terminal { flex: 1; padding: 20px; overflow-y: auto; }
-        #input-line { display: flex; padding: 20px; background: #111; }
-        input { background: transparent; border: none; color: #fff; outline: none; flex: 1; font-family: monospace; }
-        .prompt { color: #58a6ff; margin-right: 10px; }
+        /* 营造黑客帝国/Linux 控制台氛围 */
+        body {
+            background-color: #000;
+            color: #00ff41; /* 经典矩阵绿 */
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            padding: 20px;
+            height: 100vh;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #terminal-output {
+            flex: 1;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+
+        .input-area {
+            display: flex;
+            gap: 10px;
+        }
+
+        .prompt { color: #58a6ff; font-weight: bold; }
+        
+        input {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-family: inherit;
+            font-size: 1rem;
+            outline: none;
+            flex: 1;
+        }
+
+        .response { color: #8b949e; margin-bottom: 10px; }
+        .error { color: #ff6b6b; }
+        .ascii-art { color: #38bdf8; line-height: 1.1; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div id="terminal">
-        <div>Zentrix OS [Version 1.0.0]</div>
-        <div id="history"></div>
+
+    <div id="terminal-output">
+        <div class="response">Zentrix Lab OS [Version 1.0.0]</div>
+        <div class="response">键入 'help' 获取可用命令清单。</div>
     </div>
-    <div id="input-line">
-        <span class="prompt">guest@zentrix:~$</span>
-        <input type="text" id="command-input" autofocus>
+
+    <div class="input-area">
+        <span class="prompt">guest@zentrix-lab:~$</span>
+        <input type="text" id="cmd-input" autofocus autocomplete="off" spellcheck="false">
     </div>
+
     <script>
-        // 简易逻辑：仅演示 Enter 清屏，你可以把之前的复杂逻辑贴回来
-        const input = document.getElementById('command-input');
+        const input = document.getElementById('cmd-input');
+        const output = document.getElementById('terminal-output');
+
+        // 定义命令集
+        const commands = {
+            'help': '可用命令: [help] 帮助, [ls] 文件, [whoami] 身份, [neofetch] 系统信息, [clear] 清屏, [exit] 退出',
+            'whoami': '当前用户: guest (访问级别: 极客/学习者)',
+            'ls': 'index.html  status.html  about.html  terminal.html  server_config.yaml',
+            'date': () => new Date().toLocaleString(),
+            'exit': () => window.location.href = '/',
+            'neofetch': () => `
+<div class="ascii-art">
+       .---.          Zentrix@Aliyun
+      /     \\         --------------
+      [ @ @ ]         OS: Zentrix Web Shell
+      /  -  \\         Kernel: K3s-v1.29.4
+     /  ---  \\        Uptime: 28 Days
+    /        \\        Shell: JavaScript v8
+   /  /    \\  \\       Location: Beijing-Node-01
+  (  (      )  )      Status: Healthy
+   \\  \\    /  /
+    '--'--'--'        "Stay Hungry, Stay Foolish"
+</div>`
+        };
+
         input.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
-                const line = document.createElement('div');
-                line.innerHTML = `<span class="prompt">guest@zentrix:~$</span> ${input.value}`;
-                document.getElementById('history').appendChild(line);
-                if(input.value === 'clear') document.getElementById('history').innerHTML = '';
+                const rawValue = input.value.trim();
+                const cmd = rawValue.toLowerCase();
+                
+                // 1. 回显命令
+                const cmdLine = document.createElement('div');
+                cmdLine.innerHTML = `<span class="prompt">guest@zentrix-lab:~$</span> <span>${rawValue}</span>`;
+                output.appendChild(cmdLine);
+
+                // 2. 执行逻辑
+                if (cmd === 'clear') {
+                    output.innerHTML = '';
+                } else if (commands[cmd]) {
+                    const res = document.createElement('div');
+                    res.className = 'response';
+                    const result = typeof commands[cmd] === 'function' ? commands[cmd]() : commands[cmd];
+                    res.innerHTML = result;
+                    output.appendChild(res);
+                } else if (cmd !== '') {
+                    const err = document.createElement('div');
+                    err.className = 'error';
+                    err.innerText = `未找到命令: ${cmd}`;
+                    output.appendChild(err);
+                }
+
+                // 3. 自动滚动并重置
                 input.value = '';
+                output.scrollTop = output.scrollHeight;
             }
         });
+
+        // 始终聚焦输入框
+        document.addEventListener('click', () => input.focus());
     </script>
 </body>
 </html>

@@ -2,21 +2,102 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>数据看板 - Zentrix</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统状态 - Zentrix Lab</title>
     <style>
-        body { background: #0f172a; color: #fff; font-family: sans-serif; margin: 0; }
-        .container { padding: 40px; text-align: center; }
-        .box { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; display: inline-block; margin-top: 20px; }
-        .time { color: #38bdf8; font-family: monospace; }
+        :root {
+            --bg-color: #020617;
+            --card-bg: #1e293b;
+            --primary: #38bdf8;
+            --success: #10b981;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: #f1f5f9;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .status-container {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 1rem;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-top: 0;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 1rem;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 1.5rem 0;
+            font-family: monospace;
+        }
+
+        .label { color: #94a3b8; }
+        .value { color: #f1f5f9; }
+        
+        .badge {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            border: 1px solid var(--success);
+        }
+
+        .btn-home {
+            display: inline-block;
+            margin-top: 1rem;
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .btn-home:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="box">
-            <h2>实验室动态看板</h2>
-            <p>最后构建时间: <span class="time">{{BUILD_TIME}}</span></p>
-            <p>当前节点状态: <span style="color: #10b981;">Online</span></p>
+
+    <div class="status-container">
+        <h1>系统运行状态</h1>
+        
+        <div class="status-item">
+            <span class="label">节点名称:</span>
+            <span class="value">Aliyun-Zentrix-01</span>
         </div>
+
+        <div class="status-item">
+            <span class="label">运行环境:</span>
+            <span class="value">K3s / Containerd</span>
+        </div>
+
+        <div class="status-item">
+            <span class="label">集群状态:</span>
+            <span class="badge">HEALTHY</span>
+        </div>
+
+        <div class="status-item">
+            <span class="label">最后构建:</span>
+            <span class="value" style="color: var(--primary);">{{BUILD_TIME}}</span>
+        </div>
+
+        <a href="/" class="btn-home">← 返回首页</a>
     </div>
+
 </body>
 </html>
