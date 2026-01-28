@@ -12,13 +12,13 @@ def main():
     build_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     # 重点：这里改为操作 status.html
-    with open('status.html', 'r', encoding='utf-8') as f:
+    with open('web/status.html', 'r', encoding='utf-8') as f:
         content = f.read()
 
     content = content.replace('{{QUOTE_PLACEHOLDER}}', quote)
     content = content.replace('{{BUILD_TIME}}', build_time)
 
-    with open('status.html', 'w', encoding='utf-8') as f:
+    with open('web/status.html', 'w', encoding='utf-8') as f:
         f.write(content)
 
 if __name__ == "__main__":
