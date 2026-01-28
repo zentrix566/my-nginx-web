@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>萌宠实验室 - Zentrix Lab</title>
+    <style>
+        body {
+            background-color: #f8fafc;
+            color: #334155;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header { text-align: center; margin-bottom: 30px; }
+        h1 { color: #6366f1; margin-bottom: 10px; }
+
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        select, .btn-refresh {
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .btn-refresh:hover { background: #6366f1; color: white; }
+
+        .image-container {
+            width: 100%;
+            max-width: 500px;
+            height: 500px;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            border: 4px solid white;
+        }
+
+        img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: cover;
+            display: none; /* 加载前隐藏 */
+        }
+
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #6366f1;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .btn-home { margin-top: 40px; color: #94a3b8; text-decoration: none; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>🐾 萌宠治愈站</h1>
+        <p>写代码累了吗？来吸个猫/狗吧。</p>
+    </div>
+
+    <div class="controls">
+        <select id="pet-type">
+            <option value="https://api.thecatapi.com/v1/images/search">我要看猫猫 🐱</option>
+            <option value="https://dog.ceo/api/breeds/image/random">我要看狗狗 🐶</option>
+        </select>
+        <button class="btn-refresh" onclick="fetchPet()">换一只</button>
+    </div>
+
+    <div class="image-container">
+        <div id="loader" class="loader"></div>
+        <img id="pet-img" alt="Random Pet">
+    </div>
+
+    <a href="/" class="btn-home">← 返回实验室首页</a>
+
+    <script>
+        async function fetchPet() {
+            const img = document.getElementById('pet-img');
+            const loader = document.getElementById('loader');
+            const apiUrl = document.getElementById('pet-type').value;
+
+            // 重置状态
+            img.style.display = 'none';
+            loader.style.display = 'block';
+
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+                
+                // 处理不同 API 的返回格式
+                let imageUrl = "";
+                if (apiUrl.includes('thecatapi')) {
+                    imageUrl = data[0].url; // Cat API 返回数组
+                } else {
+                    imageUrl = data.message; // Dog API 返回对象中的 message
+                }
+
+                // 预加载图片
+                const tempImg = new Image();
+                tempImg.src = imageUrl;
+                tempImg.onload = () => {
+                    img.src = imageUrl;
+                    img.style.display = 'block';
+                    loader.style.display = 'none';
+                };
+
+            } catch (error) {
+                console.error("Fetch error:", error);
+                alert("获取失败，请检查网络。");
+            }
+        }
+
+        // 首次加载
+        fetchPet();
+    </script>
+</body>
+</html>
