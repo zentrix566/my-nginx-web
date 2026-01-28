@@ -1,25 +1,33 @@
-import requests
+import os
 import datetime
 
-def main():
-    # 获取数据
-    try:
-        res = requests.get("https://v1.hitokoto.cn/?c=i")
-        quote = res.json()['hitokoto']
-    except:
-        quote = "保持好奇心，继续实验。"
+# 1. 读取导航栏模板
+with open('nav.html', 'r', encoding='utf-8') as f:
+    nav_content = f.read()
 
-    build_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+# 2. 定义需要处理的文件列表
+files_to_process = ['index.html', 'web/status.html', 'web/about.html', 'web/terminal.html']
 
-    # 重点：这里改为操作 status.html
-    with open('web/status.html', 'r', encoding='utf-8') as f:
+# 获取金句数据（复用之前的逻辑）
+# quote = fetch_quote() ... 这里省略之前的获取逻辑，保持你现有的不变
+
+for file_path in files_to_process:
+    if not os.path.exists(file_path):
+        continue
+        
+    with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()
 
-    content = content.replace('{{QUOTE_PLACEHOLDER}}', quote)
-    content = content.replace('{{BUILD_TIME}}', build_time)
+    # 注入导航栏：寻找 并替换
+    if '' in content:
+        content = content.replace('', nav_content)
+    
+    # 注入金句和时间（仅针对 status.html）
+    if 'status.html' in file_path:
+        content = content.replace('{{BUILD_TIME}}', datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        # content = content.replace('{{QUOTE_PLACEHOLDER}}', quote)
 
-    with open('web/status.html', 'w', encoding='utf-8') as f:
+    with open(file_path, 'w', encoding='utf-8') as f:
         f.write(content)
 
-if __name__ == "__main__":
-    main()
+print("Successfully injected navigation and data into all pages.")

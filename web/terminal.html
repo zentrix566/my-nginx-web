@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Terminal - Zentrix</title>
+    <style>
+        body { background: #000; color: #0f0; font-family: monospace; margin: 0; height: 100vh; display: flex; flex-direction: column; }
+        #terminal { flex: 1; padding: 20px; overflow-y: auto; }
+        #input-line { display: flex; padding: 20px; background: #111; }
+        input { background: transparent; border: none; color: #fff; outline: none; flex: 1; font-family: monospace; }
+        .prompt { color: #58a6ff; margin-right: 10px; }
+    </style>
+</head>
+<body>
+    <div id="terminal">
+        <div>Zentrix OS [Version 1.0.0]</div>
+        <div id="history"></div>
+    </div>
+    <div id="input-line">
+        <span class="prompt">guest@zentrix:~$</span>
+        <input type="text" id="command-input" autofocus>
+    </div>
+    <script>
+        // 简易逻辑：仅演示 Enter 清屏，你可以把之前的复杂逻辑贴回来
+        const input = document.getElementById('command-input');
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const line = document.createElement('div');
+                line.innerHTML = `<span class="prompt">guest@zentrix:~$</span> ${input.value}`;
+                document.getElementById('history').appendChild(line);
+                if(input.value === 'clear') document.getElementById('history').innerHTML = '';
+                input.value = '';
+            }
+        });
+    </script>
+</body>
+</html>

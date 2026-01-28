@@ -3,118 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的云原生实验室</title>
+    <title>Zentrix 云原生实验室</title>
     <style>
-        /* 全局样式 */
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            overflow: hidden;
-        }
-
-        /* 磨砂玻璃效果卡片 */
-        .card {
-            text-align: center;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 3rem;
-            border-radius: 24px;
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            max-width: 400px;
-            width: 90%;
-            transition: transform 0.3s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-        }
-
-        /* 标题渐变色 */
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(to right, #38bdf8, #818cf8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        p {
-            font-size: 1.1rem;
-            color: #94a3b8;
-            line-height: 1.6;
-        }
-
-        /* 状态标签 */
-        .status-badge {
-            display: inline-block;
-            background: rgba(16, 185, 129, 0.1);
-            color: #10b981;
-            padding: 6px 16px;
-            border-radius: 50px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            margin: 15px 0;
-        }
-
-        /* 核心按钮样式 */
-        .btn {
-            display: inline-block;
-            margin-top: 25px;
-            padding: 14px 32px;
-            background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
-            color: white;
-            text-decoration: none;
-            border-radius: 12px;
-            font-weight: bold;
-            letter-spacing: 1px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
-        }
-
-        .btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 25px rgba(56, 189, 248, 0.5);
-            filter: brightness(1.1);
-        }
-
-        .btn:active {
-            transform: scale(0.98);
-        }
-
-        /* 底部装饰文字 */
-        .footer-text {
-            margin-top: 30px;
-            font-size: 0.75rem;
-            color: #475569;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
+        :root { --primary: #38bdf8; --bg-dark: #0f172a; --glass: rgba(30, 41, 59, 0.7); --text-light: #f1f5f9; }
+        body { margin: 0; padding: 0; font-family: sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: var(--text-light); min-height: 100vh; }
+        main { display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 60px 20px; }
+        .hero-card { background: var(--glass); padding: 40px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); text-align: center; max-width: 600px; backdrop-filter: blur(10px); }
+        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; margin-top: 30px; }
+        .feature-item { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; text-decoration: none; color: var(--text-light); transition: 0.3s; border: 1px solid transparent; }
+        .feature-item:hover { border-color: var(--primary); transform: translateY(-5px); }
     </style>
 </head>
 <body>
-
-    <div class="card">
-        <h1>Cloud Lab</h1>
-        <p>基于 K3s 与 GitHub Actions 的自动部署实验</p>
-        
-        <div class="status-badge">● 集群状态：运行正常</div>
-
-        <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
-        <a href="/status" class="btn">今日看板</a>
-        <a href="/about" class="btn" style="background: #334155;">关于作者</a>
+    <main>
+        <div class="hero-card">
+            <h1>⚡ Zentrix Lab</h1>
+            <p>基于 K3s + GitHub Actions 的自动化部署实验基地。</p>
+            <div class="feature-grid">
+                <a href="/status" class="feature-item">📊 看板</a>
+                <a href="/about" class="feature-item">👤 名片</a>
+                <a href="/terminal" class="feature-item">💻 终端</a>
+            </div>
         </div>
-
-        <div class="footer-text">Powered by Nginx & CI/CD</div>
-    </div>
-
+    </main>
 </body>
 </html>
