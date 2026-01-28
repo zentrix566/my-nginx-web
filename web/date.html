@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>遇见同路人 - Zentrix Lab</title>
+    <style>
+        :root {
+            --accent-color: #2563eb; /* 运动健儿蓝 */
+            --bg-color: #f8fafc;
+            --text-main: #1e293b;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .card {
+            background: #ffffff;
+            width: 100%;
+            max-width: 400px;
+            padding: 35px;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 装饰用的角标 */
+        .card::before {
+            content: "RUNNER";
+            position: absolute;
+            top: 20px;
+            right: -25px;
+            background: var(--accent-color);
+            color: #fff;
+            padding: 5px 30px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            transform: rotate(45deg);
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            margin: 0 0 25px 0;
+            color: #000;
+            border-left: 4px solid var(--accent-color);
+            padding-left: 12px;
+        }
+
+        .section {
+            margin-bottom: 24px;
+        }
+
+        .label {
+            font-size: 0.75rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .content {
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        .marathon-box {
+            background-color: #eff6ff;
+            border: 1px solid #dbeafe;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #f1f5f9;
+            text-align: center;
+        }
+
+        .back-link {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover { color: var(--accent-color); }
+
+        strong { color: var(--accent-color); }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>征友：男找女</h2>
+
+        <div class="section">
+            <span class="label">【关于我】</span>
+            <div class="content">
+                <strong>93年，河北邯郸人。</strong><br>
+                目前在北京从事 IT 相关工作。情绪稳定，为人真诚，生活方式简单，做事有韧性，是一个踏实过日子的人。
+            </div>
+        </div>
+
+        <div class="section">
+            <span class="label">【生活方式 & 规划】</span>
+            <div class="content">
+                热爱户外运动，长期坚持跑步与爬山。目前在北京工作，追求一种规律且踏实的生活节奏。
+            </div>
+        </div>
+
+        <div class="section">
+            <span class="label">【希望你】</span>
+            <div class="content">
+                女，在北京或周边省份工作。身体健康，性格温和，具备良好的沟通意愿。希望能遇到一位不慢热、愿意彼此主动了解的女生。
+            </div>
+        </div>
+
+        <div class="marathon-box">
+            <div class="content" style="font-size: 0.9rem;">
+                🏁 <strong>最后：</strong><br>
+                有机会一块跑步爬山。今年中签了<strong>石家庄和青岛马拉松（全马）</strong>，可带 4 小时 30 分及以后的跑友（男的也行）。
+            </div>
+        </div>
+
+        <div class="footer">
+            <a href="/" class="back-link">← 返回 Zentrix Lab</a>
+        </div>
+    </div>
+
+</body>
+</html>
