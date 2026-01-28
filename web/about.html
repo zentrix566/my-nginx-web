@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>关于作者 - 开发者名片</title>
+    <style>
+        body { 
+            background: #0d1117; 
+            color: #c9d1d9; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: rgba(22, 27, 34, 0.8);
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        h1 { color: #58a6ff; margin-bottom: 30px; }
+        .stats-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+        img { 
+            max-width: 100%; 
+            border-radius: 8px;
+            transition: transform 0.3s ease;
+        }
+        img:hover { transform: scale(1.02); }
+        .nav-links { margin-top: 40px; }
+        .btn {
+            color: #8b949e;
+            text-decoration: none;
+            border: 1px solid #30363d;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+        .btn:hover { background: #30363d; color: #58a6ff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>GitHub 开发者名片</h1>
+        
+        <div class="stats-grid">
+            <img src="https://github-readme-stats.vercel.app/api?username=zentrix566&show_icons=true&theme=tokyonight&count_private=true" alt="GitHub Stats">
+            
+            <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=zentrix566&layout=compact&theme=tokyonight" alt="Top Langs">
+            
+            <img src="https://github-readme-streak-stats.herokuapp.com/?user=zentrix566&theme=tokyonight" alt="GitHub Streak">
+        </div>
+
+        <div class="nav-links">
+            <a href="/" class="btn">← 返回首页</a>
+            <a href="/status" class="btn" style="margin-left:10px;">查看实时看板</a>
+        </div>
+    </div>
+</body>
+</html>
