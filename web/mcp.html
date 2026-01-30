@@ -3,73 +3,274 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MCP 运维看板</title>
+    <title>MCP 云服务器监控看板</title>
     <style>
-        :root { --primary: #007bff; --bg: #1e1e2e; --text: #cdd6f4; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 40px; }
-        .card { background: #313244; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); max-width: 500px; }
-        .stat-item { margin-bottom: 20px; }
-        .progress-bar { background: #45475a; height: 12px; border-radius: 6px; overflow: hidden; margin-top: 8px; }
-        .progress-fill { background: var(--primary); height: 100%; width: 0%; transition: width 0.5s ease; }
-        button { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        button:hover { opacity: 0.9; }
-        #status-text { margin-top: 15px; font-size: 0.9em; color: #a6adc8; }
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --text-color: #c9d1d9;
+            --accent-color: #58a6ff;
+            --success-color: #238636;
+            --danger-color: #da3633;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        }
+
+        h2 {
+            margin-top: 0;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 10px; height: 10px;
+            background-color: #8b949e;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-online { background-color: #3fb950; box-shadow: 0 0 8px #3fb950; }
+
+        .stat-group { margin-bottom: 25px; }
+
+        .label-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .progress-container {
+            background-color: #30363d;
+            height: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: var(--accent-color);
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            flex: 1;
+            background-color: #21262d;
+            color: var(--accent-color);
+            border: 1px solid rgba(240,246,252,0.1);
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background-color: #30363d;
+            border-color: #8b949e;
+        }
+
+        button:active { transform: scale(0.98); }
+
+        #console {
+            margin-top: 20px;
+            background: #010409;
+            padding: 12px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 12px;
+            border-radius: 6px;
+            color: #8b949e;
+            max-height: 100px;
+            overflow-y: auto;
+            border: 1px solid #30363d;
+        }
     </style>
 </head>
 <body>
 
+<div class="container">
     <div class="card">
-        <h2>🚀 服务器监控 (MCP)</h2>
-        <div class="stat-item">
-            <span>CPU 使用率</span>
-            <div class="progress-bar"><div id="cpu-fill" class="progress-fill"></div></div>
+        <h2>
+            <span id="dot" class="status-dot"></span>
+            服务器实时监控
+        </h2>
+
+        <div class="stat-group">
+            <div class="label-row">
+                <span>CPU 使用率</span>
+                <span id="cpu-val">0%</span>
+            </div>
+            <div class="progress-container">
+                <div id="cpu-bar" class="progress-bar"></div>
+            </div>
         </div>
-        <div class="stat-item">
-            <span>内存使用率</span>
-            <div class="progress-bar"><div id="mem-fill" class="progress-fill"></div></div>
+
+        <div class="stat-group">
+            <div class="label-row">
+                <span>内存占用 (RAM)</span>
+                <span id="mem-val">0%</span>
+            </div>
+            <div class="progress-container">
+                <div id="mem-bar" class="progress-bar"></div>
+            </div>
         </div>
-        <button onclick="updateStats()">立即刷新</button>
-        <div id="status-text">等待连接...</div>
+
+        <div class="stat-group">
+            <div class="label-row">
+                <span>磁盘空间</span>
+                <span id="disk-val">0%</span>
+            </div>
+            <div class="progress-container">
+                <div id="disk-bar" class="progress-bar" style="background-color: #bc8cff;"></div>
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button onclick="refreshData()">立即刷新数据</button>
+            <button onclick="toggleAuto()">自动刷新: <span id="auto-status">关</span></button>
+        </div>
+
+        <div id="console">正在初始化 SSE 连接...</div>
     </div>
+</div>
 
-    <script>
-        const sseUrl = "http://39.106.136.18:8000/sse";
-        let messageUrl = "";
+<script>
+    let messageUrl = "";
+    let autoInterval = null;
 
-        // 初始化 SSE
-        const eventSource = new EventSource(sseUrl);
-        eventSource.addEventListener("endpoint", (e) => {
-            messageUrl = "http://39.106.136.18:8000" + e.data;
-            document.getElementById('status-text').innerText = "✅ 连接成功";
-        });
+    // 1. 建立 SSE 连接 (使用 Nginx 转发后的相对路径)
+    const eventSource = new EventSource('/sse');
 
-        async function updateStats() {
-            if (!messageUrl) return;
-            document.getElementById('status-text').innerText = "⚡ 正在请求数据...";
-            
-            try {
-                const response = await fetch(messageUrl, {
-                    method: "POST",
-                    body: JSON.stringify({
-                        jsonrpc: "2.0", id: 1, method: "tools/call",
-                        params: { name: "get_system_status", arguments: {} }
-                    })
-                });
-                const data = await response.json();
-                
-                // 假设返回格式是 {"cpu_usage": "15.2%", "memory_usage": "45.0%"}
-                const content = JSON.parse(data.result.content[0].text);
-                
-                const cpu = content.cpu_usage.replace('%', '');
-                const mem = content.memory_usage.replace('%', '');
+    eventSource.onopen = () => {
+        printLog("SSE 隧道已开启");
+        document.getElementById('dot').classList.add('status-online');
+    };
 
-                document.getElementById('cpu-fill').style.width = cpu + '%';
-                document.getElementById('mem-fill').style.width = mem + '%';
-                document.getElementById('status-text').innerText = `最后更新: ${new Date().toLocaleTimeString()}`;
-            } catch (err) {
-                document.getElementById('status-text').innerText = "❌ 调用失败: " + err;
-            }
+    // 监听 MCP 分配的会话终点
+    eventSource.addEventListener("endpoint", (event) => {
+        messageUrl = event.data; // 格式如 /messages/?session_id=xxx
+        printLog("会话已激活: " + messageUrl);
+        refreshData(); // 连接成功后自动刷新一次
+    });
+
+    eventSource.onerror = () => {
+        printLog("错误: SSE 连接中断");
+        document.getElementById('dot').classList.remove('status-online');
+    };
+
+    // 2. 调用工具函数
+    async function refreshData() {
+        if (!messageUrl) {
+            printLog("错误: 消息通道未就绪");
+            return;
         }
-    </script>
+
+        try {
+            const response = await fetch(messageUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    jsonrpc: "2.0",
+                    id: Date.now(),
+                    method: "tools/call",
+                    params: {
+                        name: "get_system_status",
+                        arguments: {}
+                    }
+                })
+            });
+
+            const data = await response.json();
+            
+            // 解析 FastMCP 返回的内容
+            // 假设 my_ops.py 返回 json.dumps(stats)
+            const rawText = data.result.content[0].text;
+            const stats = JSON.parse(rawText);
+
+            updateUI(stats);
+            printLog("数据更新于: " + new Date().toLocaleTimeString());
+
+        } catch (err) {
+            printLog("调用工具失败: " + err.message);
+        }
+    }
+
+    // 3. UI 更新逻辑
+    function updateUI(stats) {
+        const cpu = parseFloat(stats.cpu_usage);
+        const mem = parseFloat(stats.memory_usage);
+        const disk = parseFloat(stats.disk_usage);
+
+        document.getElementById('cpu-val').innerText = stats.cpu_usage;
+        document.getElementById('cpu-bar').style.width = stats.cpu_usage;
+        
+        document.getElementById('mem-val').innerText = stats.memory_usage;
+        document.getElementById('mem-bar').style.width = stats.memory_usage;
+
+        document.getElementById('disk-val').innerText = stats.disk_usage;
+        document.getElementById('disk-bar').style.width = stats.disk_usage;
+
+        // 颜色预警
+        updateBarColor('cpu-bar', cpu);
+        updateBarColor('mem-bar', mem);
+    }
+
+    function updateBarColor(id, val) {
+        const bar = document.getElementById(id);
+        if (val > 80) bar.style.backgroundColor = '#da3633';
+        else if (val > 50) bar.style.backgroundColor = '#d29922';
+        else bar.style.backgroundColor = '#58a6ff';
+    }
+
+    function toggleAuto() {
+        if (autoInterval) {
+            clearInterval(autoInterval);
+            autoInterval = null;
+            document.getElementById('auto-status').innerText = "关";
+        } else {
+            autoInterval = setInterval(refreshData, 3000); // 3秒刷新一次
+            document.getElementById('auto-status').innerText = "开";
+        }
+    }
+
+    function printLog(msg) {
+        const con = document.getElementById('console');
+        con.innerHTML += `> ${msg}<br>`;
+        con.scrollTop = con.scrollHeight;
+    }
+</script>
+
 </body>
 </html>
