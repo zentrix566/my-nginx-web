@@ -33,23 +33,28 @@ jobs:
         run: |
           pip install requests
           python inject_data.py
-        # ======= 新增步骤：注入 IP 变量 =======
-      - name: Inject SERVER_IP into nginx.conf
+
+      # ======= 新增：统一注入所有环境变量 =======
+      - name: Inject Variables into Config and HTML
         env:
-          # 从 GitHub Repository Variables 读取
-          SERVER_IP: ${{ vars.SERVER_IP }} 
+          SERVER_IP: ${{ vars.SERVER_IP }}
+          DEEPSEEK_KEY: ${{ vars.DEEPSEEK_KEY }}
         run: |
-          # 检查变量是否存在，不存在则报错防止构建失败
-          if [ -z "$SERVER_IP" ]; then
-            echo "Error: SERVER_IP variable is not set in GitHub Settings"
+          # 检查必要变量
+          if [ -z "$SERVER_IP" ] || [ -z "$DEEPSEEK_KEY" ]; then
+            echo "Error: SERVER_IP or DEEPSEEK_KEY is missing in GitHub Settings"
             exit 1
           fi
-          # 使用 envsubst 替换 nginx.conf 中的占位符
-          # 注意：必须指定替换的变量名，否则会把 nginx 内置变量如 $host 也删掉
-          envsubst '${SERVER_IP}' < nginx.conf > nginx.conf.tmp
-          mv nginx.conf.tmp nginx.conf
-          echo "Successfully injected IP: $SERVER_IP into nginx.conf"
-      # =====================================
+
+          # 注入 nginx.conf (指定只替换 SERVER_IP，防止破坏 nginx 原生变量)
+          envsubst '${SERVER_IP}' < nginx.conf > nginx.conf.tmp && mv nginx.conf.tmp nginx.conf
+          
+          # 注入 ai_debug.html (指定只替换 DEEPSEEK_KEY)
+          # 注意：这里的单引号是防止注入多出 '}' 的关键
+          envsubst '${DEEPSEEK_KEY}' < ai_debug.html > ai_debug.tmp && mv ai_debug.tmp ai_debug.html
+          
+          echo "✅ Successfully injected SERVER_IP and DEEPSEEK_KEY"
+
       # 3. 登录到 GitHub 镜像仓库 (GHCR)
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -59,7 +64,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       # 4. 构建镜像并推送到仓库
-      # 此时 index.html 和 被修改过的 status.html 都会被打包进去
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
@@ -78,8 +82,7 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
-          port: 57892  # 你的自定义 SSH 端口
+          port: 57892
           script: |
             # 强制 K3s 重新拉取最新的镜像并重启 Pod
-            # 确保你的 Deployment 名字是 my-nginx
             kubectl rollout restart deployment my-nginx
