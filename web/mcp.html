@@ -3,20 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MCP 异步运维看板</title>
+    <title>MCP 运维监控系统</title>
     <style>
-        :root { --bg: #0d1117; --card: #161b22; --text: #c9d1d9; --blue: #58a6ff; }
-        body { font-family: system-ui; background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 40px; }
-        .card { background: var(--card); border: 1px solid #30363d; border-radius: 12px; padding: 24px; width: 100%; max-width: 450px; }
-        .stat-item { margin-bottom: 20px; }
-        .bar-bg { background: #30363d; height: 8px; border-radius: 4px; margin-top: 8px; }
-        .bar-fill { height: 100%; width: 0%; background: var(--blue); border-radius: 4px; transition: width 0.8s ease; }
-        button { background: #238636; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; }
-        button:disabled { background: #21262d; color: #8b949e; cursor: not-allowed; }
-        #log { margin-top: 20px; font-size: 12px; color: #8b949e; background: #010409; padding: 10px; border-radius: 6px; max-height: 120px; overflow-y: auto; line-height: 1.6; }
-        .status-header { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
-        .dot { width: 10px; height: 10px; border-radius: 50%; background: gray; }
-        .online { background: #3fb950; box-shadow: 0 0 8px #3fb950; }
+        :root { --bg: #0d1117; --card: #161b22; --text: #c9d1d9; --blue: #58a6ff; --green: #238636; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 40px; margin: 0; }
+        .card { background: var(--card); border: 1px solid #30363d; border-radius: 12px; padding: 24px; width: 100%; max-width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .status-header { display: flex; align-items: center; gap: 10px; margin-bottom: 25px; border-bottom: 1px solid #30363d; padding-bottom: 15px; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; background: #484f58; transition: 0.3s; }
+        .online { background: #3fb950; box-shadow: 0 0 12px #3fb950; }
+        .stat-item { margin-bottom: 25px; }
+        .label-group { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; font-weight: 500; }
+        .bar-bg { background: #30363d; height: 10px; border-radius: 5px; overflow: hidden; }
+        .bar-fill { height: 100%; width: 0%; background: var(--blue); transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); }
+        button { background: var(--green); color: white; border: 1px solid rgba(240,246,252,0.1); padding: 12px; border-radius: 6px; cursor: pointer; width: 100%; font-size: 15px; font-weight: 600; transition: 0.2s; }
+        button:hover:not(:disabled) { background: #2ea043; }
+        button:disabled { background: #21262d; color: #8b949e; cursor: not-allowed; border-color: transparent; }
+        #log { margin-top: 20px; font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; font-size: 11px; color: #8b949e; background: #010409; padding: 12px; border-radius: 6px; max-height: 150px; overflow-y: auto; border: 1px solid #30363d; }
+        .log-entry { margin-bottom: 4px; border-left: 2px solid #30363d; padding-left: 8px; }
     </style>
 </head>
 <body>
@@ -24,21 +27,21 @@
 <div class="card">
     <div class="status-header">
         <div id="dot" class="dot"></div>
-        <h2 style="margin:0">服务器实时监控</h2>
+        <h2 style="margin:0; font-size: 18px;">Aliyun 2C2G 实时监控</h2>
     </div>
 
     <div class="stat-item">
-        <div style="display:flex; justify-content:space-between"><span>CPU 使用率</span><span id="cpu-txt">0%</span></div>
+        <div class="label-group"><span>CPU 使用率</span><span id="cpu-txt">0%</span></div>
         <div class="bar-bg"><div id="cpu-bar" class="bar-fill"></div></div>
     </div>
 
     <div class="stat-item">
-        <div style="display:flex; justify-content:space-between"><span>内存占用</span><span id="mem-txt">0%</span></div>
+        <div class="label-group"><span>内存占用</span><span id="mem-txt">0%</span></div>
         <div class="bar-bg"><div id="mem-bar" class="bar-fill"></div></div>
     </div>
 
-    <button id="refreshBtn" onclick="sendRefreshRequest()" disabled>等待通道就绪...</button>
-    <div id="log">正在初始化 SSE 连接...</div>
+    <button id="refreshBtn" onclick="sendToolCall()" disabled>初始化中...</button>
+    <div id="log"></div>
 </div>
 
 
@@ -48,66 +51,87 @@
     const logEl = document.getElementById('log');
     const refreshBtn = document.getElementById('refreshBtn');
 
-    // 1. 初始化 SSE 连接 (通过 Nginx 转发路径 /sse)
+    // 1. 建立 SSE 连接
     const eventSource = new EventSource('/sse');
 
-    // 监听通道开启
     eventSource.onopen = () => {
-        addLog("✅ SSE 隧道已连接");
+        addLog("🌐 SSE 隧道已连接");
         document.getElementById('dot').classList.add('online');
     };
 
-    // 关键：获取消息发送的 Endpoint
-    eventSource.addEventListener("endpoint", (e) => {
-        messageUrl = e.data; 
+    // 2. 协议核心：监听 Endpoint 并完成握手
+    eventSource.addEventListener("endpoint", async (e) => {
+        messageUrl = e.data;
         addLog("🔗 消息路由已激活");
-        refreshBtn.disabled = false;
-        refreshBtn.innerText = "立即刷新数据";
-        sendRefreshRequest(); // 自动初次加载
+        
+        // 第一步：发送 initialize
+        addLog("🚀 正在握手 (initialize)...");
+        const initResult = await postToMcp({
+            jsonrpc: "2.0",
+            id: "init_v1",
+            method: "initialize",
+            params: {
+                protocolVersion: "2024-11-05",
+                capabilities: {},
+                clientInfo: { name: "web-dashboard", version: "1.0.0" }
+            }
+        });
+
+        if (initResult) {
+            // 第二步：发送 notifications/initialized
+            await postToMcp({
+                jsonrpc: "2.0",
+                method: "notifications/initialized"
+            });
+            
+            addLog("✅ 握手成功，服务就绪");
+            refreshBtn.disabled = false;
+            refreshBtn.innerText = "立即刷新数据";
+            sendToolCall(); // 初始加载数据
+        }
     });
 
-    // 核心逻辑：处理从 SSE 通道回传的数据
+    // 3. 处理从 SSE 推回的结果
     eventSource.onmessage = (event) => {
         try {
             const data = JSON.parse(event.data);
             
-            // 匹配 JSON-RPC 响应包
+            // 响应 initialize 会包含服务端能力，我们主要看工具结果
             if (data.result && data.result.content) {
                 const stats = JSON.parse(data.result.content[0].text);
                 updateUI(stats);
-                addLog("📥 收到最新数据包");
+                addLog("📥 数据已更新");
             }
         } catch (err) {
-            // 忽略非 JSON 的心跳或 Accepted 文本
-            console.debug("忽略非结构化消息", event.data);
+            console.debug("忽略非结构化消息");
         }
     };
 
-    // 2. 发送指令 (通过 POST 到 messageUrl)
-    async function sendRefreshRequest() {
-        if (!messageUrl) return;
-        
-        addLog("📤 发送刷新请求...");
+    // 4. 通用的 POST 发送函数
+    async function postToMcp(payload) {
         try {
             const response = await fetch(messageUrl, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    jsonrpc: "2.0",
-                    id: Date.now(),
-                    method: "tools/call",
-                    params: { name: "get_system_status", arguments: {} }
-                })
+                body: JSON.stringify(payload)
             });
-
-            // 修复 Accepted 报错的核心：不使用 response.json()
-            const text = await response.text(); 
-            if (text.includes("Accepted")) {
-                addLog("🆗 服务器已受理请求");
-            }
+            return await response.text(); // MCP 返回 "Accepted" 文本
         } catch (err) {
-            addLog("❌ 请求失败: " + err.message);
+            addLog("❌ 通讯失败: " + err.message);
+            return null;
         }
+    }
+
+    // 5. 执行工具调用
+    function sendToolCall() {
+        if (!messageUrl) return;
+        addLog("📤 请求实时数据...");
+        postToMcp({
+            jsonrpc: "2.0",
+            id: Date.now(),
+            method: "tools/call",
+            params: { name: "get_system_status", arguments: {} }
+        });
     }
 
     function updateUI(stats) {
@@ -115,17 +139,22 @@
         document.getElementById('cpu-bar').style.width = stats.cpu_usage;
         document.getElementById('mem-txt').innerText = stats.memory_usage;
         document.getElementById('mem-bar').style.width = stats.memory_usage;
+        
+        // 动态颜色：超过 80% 变红
+        const cpuVal = parseFloat(stats.cpu_usage);
+        document.getElementById('cpu-bar').style.background = cpuVal > 80 ? '#da3633' : '#58a6ff';
     }
 
     function addLog(msg) {
         const time = new Date().toLocaleTimeString().split(' ')[0];
-        logEl.innerHTML += `<div>[${time}] ${msg}</div>`;
+        logEl.innerHTML += `<div class="log-entry"><strong>${time}</strong> ${msg}</div>`;
         logEl.scrollTop = logEl.scrollHeight;
     }
 
     eventSource.onerror = () => {
-        addLog("🚨 连接异常，请检查 Nginx 或 MCP 进程");
+        addLog("🚨 SSE 连接断开，请检查后端");
         document.getElementById('dot').classList.remove('online');
+        refreshBtn.disabled = true;
     };
 </script>
 
