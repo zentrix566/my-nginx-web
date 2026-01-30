@@ -29,32 +29,26 @@ jobs:
           python-version: '3.9'
 
       # 2. 运行注入脚本，修改 status.html 的内容
-      - name: Inject Dynamic Data into status.html
-        run: |
-          pip install requests
-          python inject_data.py
-
-      # ======= 核心步骤：从 Secrets 注入机密数据 =======
       - name: Inject Secrets into Config and HTML
         env:
-          # 从 GitHub Secrets 读取（确保你在 Settings -> Secrets 中已添加）
           SERVER_IP: ${{ secrets.SERVER_IP }}
           DEEPSEEK_KEY: ${{ secrets.DEEPSEEK_KEY }}
         run: |
-          # 验证 Secrets 是否成功加载
           if [ -z "$SERVER_IP" ] || [ -z "$DEEPSEEK_KEY" ]; then
-            echo "❌ Error: SERVER_IP or DEEPSEEK_KEY secret is not set in GitHub"
+            echo "❌ Error: Secrets not set"
             exit 1
           fi
 
-          # 注入 nginx.conf (仅替换 ${SERVER_IP})
+          # 注入 nginx.conf (sed 替换占位符)
+          # 假设 nginx.conf 里用的是 ${SERVER_IP}，我们可以继续用 envsubst 
+          # 但为了保险，也可以在 nginx.conf 里用 __SERVER_IP__
           envsubst '${SERVER_IP}' < nginx.conf > nginx.conf.tmp && mv nginx.conf.tmp nginx.conf
           
-          # 注入 ai_debug.html (仅替换 ${DEEPSEEK_KEY})
-          # 使用单引号防止 envsubst 误解析 HTML 中的其他字符
-          envsubst '${DEEPSEEK_KEY}' < ai_debug.html > ai_debug.tmp && mv ai_debug.tmp ai_debug.html
+          # 💡 核心改动：使用 sed 替换 html 中的占位符
+          # -i 表示直接修改文件，s/旧/新/g 是替换指令
+          sed -i "s/__DS_KEY_PLACEHOLDER__/${DEEPSEEK_KEY}/g" ai_debug.html
           
-          echo "✅ Successfully injected Secrets (IP and Key) into config files."
+          echo "✅ Successfully injected Secrets using sed"
 
       # 3. 登录到 GitHub 镜像仓库 (GHCR)
       - name: Log in to GHCR
