@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>我的 MCP 控制台</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f4f4f9; }
+        #log { background: #000; color: #0f0; padding: 15px; height: 300px; overflow-y: auto; border-radius: 5px; }
+        button { padding: 10px 20px; cursor: pointer; background: #4CAF50; color: white; border: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>MCP 远程服务器监控</h1>
+    <button onclick="callTool()">获取系统状态</button>
+    <h3>实时日志：</h3>
+    <div id="log"></div>
+
+    <script>
+        const logDiv = document.getElementById('log');
+        const sseUrl = "http://39.106.136.18:8000/sse";
+        let messageUrl = "";
+
+        // 1. 建立 SSE 连接
+        const eventSource = new EventSource(sseUrl);
+
+        eventSource.onmessage = (event) => {
+            logDiv.innerHTML += `<div>[收到事件]: ${event.data}</div>`;
+        };
+
+        // 接收初始化信息，获取消息发送地址
+        eventSource.addEventListener("endpoint", (event) => {
+            // 这里的 event.data 通常是 /messages/?session_id=xxx
+            messageUrl = "http://39.106.136.18:8000" + event.data;
+            logDiv.innerHTML += `<div style="color: yellow">[系统]: 连接成功，消息通道已建立</div>`;
+        });
+
+        // 2. 调用工具的函数
+        async function callTool() {
+            if (!messageUrl) return alert("连接尚未就绪");
+
+            const requestBody = {
+                jsonrpc: "2.0",
+                id: Date.now(),
+                method: "tools/call",
+                params: {
+                    name: "get_system_status",
+                    arguments: {}
+                }
+            };
+
+            const response = await fetch(messageUrl, {
+                method: "POST",
+                body: JSON.stringify(requestBody),
+                headers: { "Content-Type": "application/json" }
+            });
+
+            logDiv.innerHTML += `<div style="color: cyan">[指令]: 已发送工具调用请求...</div>`;
+        }
+    </script>
+</body>
+</html>
