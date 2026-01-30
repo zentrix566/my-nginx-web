@@ -33,7 +33,23 @@ jobs:
         run: |
           pip install requests
           python inject_data.py
-
+        # ======= 新增步骤：注入 IP 变量 =======
+      - name: Inject SERVER_IP into nginx.conf
+        env:
+          # 从 GitHub Repository Variables 读取
+          SERVER_IP: ${{ vars.SERVER_IP }} 
+        run: |
+          # 检查变量是否存在，不存在则报错防止构建失败
+          if [ -z "$SERVER_IP" ]; then
+            echo "Error: SERVER_IP variable is not set in GitHub Settings"
+            exit 1
+          fi
+          # 使用 envsubst 替换 nginx.conf 中的占位符
+          # 注意：必须指定替换的变量名，否则会把 nginx 内置变量如 $host 也删掉
+          envsubst '${SERVER_IP}' < nginx.conf > nginx.conf.tmp
+          mv nginx.conf.tmp nginx.conf
+          echo "Successfully injected IP: $SERVER_IP into nginx.conf"
+      # =====================================
       # 3. 登录到 GitHub 镜像仓库 (GHCR)
       - name: Log in to GHCR
         uses: docker/login-action@v3
