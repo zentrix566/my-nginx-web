@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MCP + DeepSeek 智能运维</title>
+    <style>
+        body { font-family: system-ui; background: #0d1117; color: #c9d1d9; padding: 20px; display: flex; gap: 20px; }
+        .panel { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 15px; flex: 1; }
+        #log { background: #000; color: #79c0ff; height: 300px; overflow-y: auto; font-size: 12px; padding: 10px; border-radius: 4px; }
+        #chat-history { height: 300px; overflow-y: auto; border-bottom: 1px solid #333; margin-bottom: 10px; }
+        .msg { margin: 8px 0; padding: 8px; border-radius: 4px; }
+        .user { background: #1f6feb; text-align: right; }
+        .ai { background: #238636; }
+        input { width: 80%; padding: 8px; background: #010409; color: white; border: 1px solid #30363d; }
+        button { padding: 8px 15px; cursor: pointer; background: #238636; color: white; border: none; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="panel">
+    <h3>智能对话 (DeepSeek)</h3>
+    <div id="chat-history"></div>
+    <input type="text" id="userInput" placeholder="问问服务器状态...">
+    <button onclick="askAI()">提问</button>
+</div>
+
+<div class="panel">
+    <h3>MCP 控制台</h3>
+    <button onclick="initMCP()">1. 连接 MCP 服务</button>
+    <div id="status">状态: 未连接</div>
+    <div id="log"></div>
+</div>
+
+<script>
+    const DEEPSEEK_KEY = "${DEEPSEEK_KEY}";
+    let messageUrl = "";
+    let mcpData = null; // 存储 MCP 返回的最新数据
+
+    // --- 1. MCP 逻辑 ---
+    function addLog(msg, type = 'info') {
+    const colors = {
+        info: '#79c0ff',    // 蓝色 (系统)
+        ai: '#aff5b4',      // 绿色 (AI)
+        tool: '#d2a8ff',    // 紫色 (工具)
+        error: '#ff7b72'    // 红色 (错误)
+    };
+    const div = document.createElement('div');
+    div.style.color = colors[type] || colors.info;
+    div.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}`;
+    logEl.appendChild(div);
+    logEl.scrollTop = logEl.scrollHeight;
+}
+    const logEl = document.getElementById('log');
+
+    async function initMCP() {
+        const es = new EventSource('/sse');
+        es.addEventListener("endpoint", async (e) => {
+            messageUrl = e.data;
+            await fetch(messageUrl, {
+                method: "POST",
+                body: JSON.stringify({
+                    jsonrpc: "2.0", id: "i1", method: "initialize",
+                    params: { protocolVersion: "2024-11-05", capabilities: {tools:{}}, clientInfo: {name: "web", version: "1.0"}}
+                })
+            });
+            await fetch(messageUrl, { method: "POST", body: JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" }) });
+            document.getElementById('status').innerText = "状态: 已就绪";
+            addLog("✅ MCP 服务器已就绪");
+        });
+
+        es.onmessage = (e) => {
+            const res = JSON.parse(e.data);
+            if (res.result && res.result.content) {
+                mcpData = res.result.content[0].text;
+                addLog("📥 收到工具结果: " + mcpData);
+            }
+        };
+    }
+
+    // --- 2. DeepSeek 逻辑 ---
+    async function askAI() {
+        const text = document.getElementById('userInput').value;
+        if (!text) return;
+        appendChat('user', text);
+
+        // A. 第一次询问 DeepSeek，带上工具定义
+        const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${DEEPSEEK_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+                model: "deepseek-chat",
+                messages: [{ role: "user", content: text }],
+                tools: [{
+                    type: "function",
+                    function: {
+                        name: "get_system_status",
+                        description: "获取服务器 CPU 和内存占用"
+                    }
+                }]
+            })
+        });
+
+        const data = await response.json();
+        const msg = data.choices[0].message;
+
+        // B. 检查 AI 是否要求调用工具
+        if (msg.tool_calls) {
+            const toolCall = msg.tool_calls[0];
+            addLog(`🤖 AI 请求调用: ${toolCall.function.name}`);
+            
+            // 执行 MCP 工具
+            await fetch(messageUrl, {
+                method: "POST",
+                body: JSON.stringify({
+                    jsonrpc: "2.0", id: "call_1",
+                    method: "tools/call",
+                    params: { name: "get_system_status", arguments: {} }
+                })
+            });
+
+            // 等待一秒让 SSE 接收数据
+            setTimeout(async () => {
+                // C. 将工具结果发回给 AI
+                const finalRes = await fetch("https://api.deepseek.com/v1/chat/completions", {
+                    method: "POST",
+                    headers: { "Authorization": `Bearer ${DEEPSEEK_KEY}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        model: "deepseek-chat",
+                        messages: [
+                            { role: "user", content: text },
+                            msg,
+                            { role: "tool", tool_call_id: toolCall.id, content: mcpData }
+                        ]
+                    })
+                });
+                const finalData = await finalRes.json();
+                appendChat('ai', finalData.choices[0].message.content);
+            }, 1500);
+        } else {
+            appendChat('ai', msg.content);
+        }
+    }
+
+    function appendChat(role, text) {
+        const div = document.createElement('div');
+        div.className = `msg ${role}`;
+        div.innerText = text;
+        document.getElementById('chat-history').appendChild(div);
+    }
+</script>
+</body>
+</html>
