@@ -1,60 +1,74 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>我的 MCP 控制台</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP 运维看板</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; background: #f4f4f9; }
-        #log { background: #000; color: #0f0; padding: 15px; height: 300px; overflow-y: auto; border-radius: 5px; }
-        button { padding: 10px 20px; cursor: pointer; background: #4CAF50; color: white; border: none; border-radius: 5px; }
+        :root { --primary: #007bff; --bg: #1e1e2e; --text: #cdd6f4; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 40px; }
+        .card { background: #313244; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); max-width: 500px; }
+        .stat-item { margin-bottom: 20px; }
+        .progress-bar { background: #45475a; height: 12px; border-radius: 6px; overflow: hidden; margin-top: 8px; }
+        .progress-fill { background: var(--primary); height: 100%; width: 0%; transition: width 0.5s ease; }
+        button { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        button:hover { opacity: 0.9; }
+        #status-text { margin-top: 15px; font-size: 0.9em; color: #a6adc8; }
     </style>
 </head>
 <body>
-    <h1>MCP 远程服务器监控</h1>
-    <button onclick="callTool()">获取系统状态</button>
-    <h3>实时日志：</h3>
-    <div id="log"></div>
+
+    <div class="card">
+        <h2>🚀 服务器监控 (MCP)</h2>
+        <div class="stat-item">
+            <span>CPU 使用率</span>
+            <div class="progress-bar"><div id="cpu-fill" class="progress-fill"></div></div>
+        </div>
+        <div class="stat-item">
+            <span>内存使用率</span>
+            <div class="progress-bar"><div id="mem-fill" class="progress-fill"></div></div>
+        </div>
+        <button onclick="updateStats()">立即刷新</button>
+        <div id="status-text">等待连接...</div>
+    </div>
 
     <script>
-        const logDiv = document.getElementById('log');
         const sseUrl = "http://39.106.136.18:8000/sse";
         let messageUrl = "";
 
-        // 1. 建立 SSE 连接
+        // 初始化 SSE
         const eventSource = new EventSource(sseUrl);
-
-        eventSource.onmessage = (event) => {
-            logDiv.innerHTML += `<div>[收到事件]: ${event.data}</div>`;
-        };
-
-        // 接收初始化信息，获取消息发送地址
-        eventSource.addEventListener("endpoint", (event) => {
-            // 这里的 event.data 通常是 /messages/?session_id=xxx
-            messageUrl = "http://39.106.136.18:8000" + event.data;
-            logDiv.innerHTML += `<div style="color: yellow">[系统]: 连接成功，消息通道已建立</div>`;
+        eventSource.addEventListener("endpoint", (e) => {
+            messageUrl = "http://39.106.136.18:8000" + e.data;
+            document.getElementById('status-text').innerText = "✅ 连接成功";
         });
 
-        // 2. 调用工具的函数
-        async function callTool() {
-            if (!messageUrl) return alert("连接尚未就绪");
+        async function updateStats() {
+            if (!messageUrl) return;
+            document.getElementById('status-text').innerText = "⚡ 正在请求数据...";
+            
+            try {
+                const response = await fetch(messageUrl, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        jsonrpc: "2.0", id: 1, method: "tools/call",
+                        params: { name: "get_system_status", arguments: {} }
+                    })
+                });
+                const data = await response.json();
+                
+                // 假设返回格式是 {"cpu_usage": "15.2%", "memory_usage": "45.0%"}
+                const content = JSON.parse(data.result.content[0].text);
+                
+                const cpu = content.cpu_usage.replace('%', '');
+                const mem = content.memory_usage.replace('%', '');
 
-            const requestBody = {
-                jsonrpc: "2.0",
-                id: Date.now(),
-                method: "tools/call",
-                params: {
-                    name: "get_system_status",
-                    arguments: {}
-                }
-            };
-
-            const response = await fetch(messageUrl, {
-                method: "POST",
-                body: JSON.stringify(requestBody),
-                headers: { "Content-Type": "application/json" }
-            });
-
-            logDiv.innerHTML += `<div style="color: cyan">[指令]: 已发送工具调用请求...</div>`;
+                document.getElementById('cpu-fill').style.width = cpu + '%';
+                document.getElementById('mem-fill').style.width = mem + '%';
+                document.getElementById('status-text').innerText = `最后更新: ${new Date().toLocaleTimeString()}`;
+            } catch (err) {
+                document.getElementById('status-text').innerText = "❌ 调用失败: " + err;
+            }
         }
     </script>
 </body>
