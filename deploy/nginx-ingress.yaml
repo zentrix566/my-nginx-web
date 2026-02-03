@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nginx-ingress
+  annotations:
+    # 告诉 K3s 使用默认的 traefik
+    kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: my-nginx-service  # ！！！这里确保填入你实际的 Service 名称
+            port:
+              number: 80            # ！！！这里确保填入 Service 的端口

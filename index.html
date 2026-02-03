@@ -7,112 +7,136 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         :root {
-            --primary-color: #3b82f6;
-            --bg-dark: #0a0a0a;
-            --glass: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --primary: #3b82f6;
+            --accent: #60a5fa;
+            --bg: #050505;
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-hover: rgba(59, 130, 246, 0.08);
+            --border: rgba(255, 255, 255, 0.1);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: crosshair; }
 
         body {
-            background-color: var(--bg-dark);
-            color: #fff;
-            font-family: "JetBrains Mono", "PingFang SC", monospace;
-            overflow: hidden; /* 保持整洁，禁止滚动 */
+            background-color: var(--bg);
+            color: #ececec;
+            font-family: "JetBrains Mono", "Inter", "PingFang SC", monospace;
+            overflow: hidden;
             height: 100vh;
         }
 
-        /* 3D 背景容器 */
         #canvas-container {
             position: fixed;
-            top: 0;
-            left: 0;
+            top: 0; left: 0;
             z-index: 0;
+            filter: blur(1px);
         }
 
-        /* 主体布局 */
         .layout {
             position: relative;
-            z-index: 1;
+            z-index: 10;
             height: 100%;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background: radial-gradient(circle at center, transparent 0%, var(--bg-dark) 80%);
+            background: radial-gradient(circle at center, transparent 0%, var(--bg) 90%);
+            padding: 20px;
+        }
+
+        /* 状态栏动画 */
+        .status-bar {
+            font-size: 0.7rem;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--primary);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--primary);
+            animation: breathe 2s infinite;
+        }
+
+        @keyframes breathe {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
         }
 
         header {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 50px;
         }
 
         h1 {
-            font-size: 2.5rem;
-            letter-spacing: -1px;
-            margin-bottom: 10px;
-            background: linear-gradient(to right, #fff, #666);
+            font-size: 3.5rem;
+            font-weight: 800;
+            letter-spacing: -2px;
+            background: linear-gradient(180deg, #fff 0%, #444 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5));
         }
 
-        .status-bar {
-            font-size: 0.8rem;
-            color: var(--primary-color);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        /* 核心按钮组 */
+        /* 按钮容器升级 */
         .btn-group {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            max-width: 500px;
-            width: 90%;
+            gap: 12px;
+            width: 100%;
+            max-width: 540px;
         }
 
         .btn {
             background: var(--glass);
-            border: 1px solid var(--glass-border);
-            padding: 20px;
-            text-align: center;
+            border: 1px solid var(--border);
+            padding: 18px;
             text-decoration: none;
-            color: rgba(255,255,255,0.8);
-            border-radius: 8px;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            font-size: 0.9rem;
+            color: rgba(255,255,255,0.7);
+            border-radius: 12px;
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-size: 0.85rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
         }
 
+        /* 悬浮发光效果 */
         .btn:hover {
-            background: rgba(59, 130, 246, 0.1);
-            border-color: var(--primary-color);
+            background: var(--glass-hover);
+            border-color: var(--accent);
             color: #fff;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 15px rgba(59, 130, 246, 0.2);
         }
 
-        /* 重点入口加宽 */
-        .btn-full {
-            grid-column: span 2;
-        }
+        .btn:active { transform: scale(0.98); }
+
+        .btn-full { grid-column: span 2; font-weight: bold; border-color: rgba(59, 130, 246, 0.3); }
 
         footer {
             position: absolute;
-            bottom: 30px;
-            font-size: 0.7rem;
-            color: #555;
-            text-align: center;
+            bottom: 40px;
+            font-size: 0.65rem;
+            color: #444;
+            letter-spacing: 1px;
         }
 
-        /* 响应式调整 */
+        /* 移动端优化 */
         @media (max-width: 480px) {
+            h1 { font-size: 2.5rem; }
             .btn-group { grid-template-columns: 1fr; }
             .btn-full { grid-column: span 1; }
         }
@@ -124,61 +148,58 @@
 
     <div class="layout">
         <header>
-            <div class="status-bar">K3s Cluster Online</div>
+            <div class="status-bar">
+                <span class="status-dot"></span>
+                K3s Cluster Online
+            </div>
             <h1>Zentrix Lab</h1>
-            <p style="color: #888; font-size: 0.9rem;">23-25 日记外存计划 / 运动与运维实验室</p>
         </header>
 
         <nav class="btn-group">
             <a href="/status" class="btn">📊 动态看板</a>
             <a href="/about" class="btn">👤 关于作者</a>
-            <a href="/date" class="btn btn-full" style="border-color: rgba(59, 130, 246, 0.4);">🏃‍♂️ 寻同路人</a>            
+            <a href="/date" class="btn btn-full">🏃‍♂️ 寻找同路人</a>
             <a href="/terminal" class="btn">💻 黑客终端</a>
             <a href="/zen" class="btn">🧘 极客禅</a>
             <a href="/space" class="btn">🛰️ 深空监测</a>
             <a href="/pets" class="btn">🐾 萌宠治愈</a>
-            <a href="/yanshi" class="btn">演示效果</a>
-            <a href="/mcp" class="btn">MCP 测试</a>
-            <a href="/ai_debug" class="btn">真正的 MCP </a>
         </nav>
 
         <footer>
-            &copy; 2026 Zentrix Lab. Powered by K3s & WASM Core.
+            &copy; 2026 ZENTRIX LAB. DEPLOYED ON EDGE.
         </footer>
     </div>
 
     <script>
-        // --- Three.js 粒子特效脚本 ---
+        // --- 优化的 Three.js 脚本 ---
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // 限制 DPR 提升性能
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-        // 粒子几何体
         const particlesGeometry = new THREE.BufferGeometry();
-        const count = 3000;
+        const count = 4000;
         const posArray = new Float32Array(count * 3);
 
         for(let i=0; i < count * 3; i++) {
-            posArray[i] = (Math.random() - 0.5) * 8;
+            posArray[i] = (Math.random() - 0.5) * 10;
         }
         particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
 
-        // 粒子材质
         const particlesMaterial = new THREE.PointsMaterial({
-            size: 0.008,
+            size: 0.005,
             color: '#3b82f6',
             transparent: true,
-            opacity: 0.4,
+            opacity: 0.6,
             blending: THREE.AdditiveBlending
         });
 
         const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
         scene.add(particlesMesh);
-        camera.position.z = 2;
+        camera.position.z = 3;
 
-        // 鼠标交互
         let mouseX = 0;
         let mouseY = 0;
         document.addEventListener('mousemove', (e) => {
@@ -186,16 +207,15 @@
             mouseY = (e.clientY / window.innerHeight - 0.5);
         });
 
-        // 帧动画
         function animate() {
             requestAnimationFrame(animate);
-            particlesMesh.rotation.y += 0.001;
-            particlesMesh.rotation.x += (mouseY * 0.05);
-            particlesMesh.rotation.y += (mouseX * 0.05);
+            particlesMesh.rotation.y += 0.0008;
+            // 平滑跟随
+            particlesMesh.rotation.x += (mouseY * 0.1 - particlesMesh.rotation.x) * 0.05;
+            particlesMesh.rotation.y += (mouseX * 0.1 - particlesMesh.rotation.y) * 0.05;
             renderer.render(scene, camera);
         }
 
-        // 窗口自适应
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
