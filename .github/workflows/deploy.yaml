@@ -38,10 +38,6 @@ jobs:
             echo "❌ Error: Secrets not set"
             exit 1
           fi
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
           # 注入 nginx.conf (sed 替换占位符)
           # 假设 nginx.conf 里用的是 ${SERVER_IP}，我们可以继续用 envsubst 
           # 但为了保险，也可以在 nginx.conf 里用 __SERVER_IP__
@@ -52,10 +48,6 @@ jobs:
           sed -i "s/__DS_KEY_PLACEHOLDER__/${DEEPSEEK_KEY}/g" web/ai_debug.html
           
           echo "✅ Successfully injected Secrets using sed"
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
       # 3. 登录到 GitHub 镜像仓库 (GHCR)
       - name: Log in to GHCR
         uses: docker/login-action@v3
