@@ -78,7 +78,7 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
-          port: 57892
+          port: ${{ secrets.SSH_PORT }}
           script: |
             # 强制 K3s 重新拉取最新的镜像并重启 Pod
             kubectl rollout restart deployment my-nginx
