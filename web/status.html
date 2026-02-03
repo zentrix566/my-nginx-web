@@ -90,12 +90,14 @@
             <span class="label">集群状态:</span>
             <span class="badge">HEALTHY</span>
         </div>
-
         <div class="status-item">
             <span class="label">最后构建:</span>
-            <span class="value" style="color: var(--primary);">{{BUILD_TIME}}</span>
+            <span id="build-time" class="value" style="color: var(--primary);">Loading...</span>
         </div>
-
+        <script>
+            // 自动填充当前系统时间
+            document.getElementById('build-time').textContent = new Date().toLocaleString();
+        </script>
         <a href="/" class="btn-home">← 返回首页</a>
     </div>
 
