@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>每日随记</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            color: #333;
+        }
+        #quote-container {
+            max-width: 600px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            backdrop-filter: blur(10px);
+            transition: all 0.5s ease;
+        }
+        #content {
+            font-size: 1.5rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        #author {
+            font-size: 1.1rem;
+            color: #666;
+            font-style: italic;
+        }
+        #btn-refresh {
+            margin-top: 30px;
+            padding: 10px 25px;
+            border: none;
+            background: #4a90e2;
+            color: white;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        #btn-refresh:hover {
+            background: #357abd;
+        }
+    </style>
+</head>
+<body>
+
+<div id="quote-container">
+    <div id="content">正在拨动命运的齿轮...</div>
+    <div id="author"></div>
+    <button id="btn-refresh" onclick="fetchQuote()">再换一句</button>
+</div>
+
+<script>
+    async function fetchQuote() {
+        const contentEl = document.getElementById('content');
+        const authorEl = document.getElementById('author');
+        
+        // 加上渐隐效果
+        contentEl.style.opacity = 0;
+        
+        try {
+            // 注意：这里用相对路径，前提是你的 HTML 放在 static 目录下
+            const response = await fetch('/api/quotes/random');
+            const data = await response.json();
+            
+            setTimeout(() => {
+                contentEl.innerText = data.content;
+                authorEl.innerText = data.author ? `—— ${data.author}` : "—— 佚名";
+                contentEl.style.opacity = 1;
+            }, 300);
+            
+        } catch (error) {
+            contentEl.innerText = "暂时无法获取感悟，请稍后再试。";
+            contentEl.style.opacity = 1;
+        }
+    }
+
+    // 页面加载时自动获取一次
+    window.onload = fetchQuote;
+</script>
+
+</body>
+</html>
