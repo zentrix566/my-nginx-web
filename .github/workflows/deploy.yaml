@@ -45,7 +45,7 @@ jobs:
           
           # 💡 核心改动：使用 sed 替换 html 中的占位符
           # -i 表示直接修改文件，s/旧/新/g 是替换指令
-          sed -i "s/__DS_KEY_PLACEHOLDER__/${DEEPSEEK_KEY}/g" web/ai_debug.html
+          sed -i "s/aaa/${DEEPSEEK_KEY}/g" web/ai_debug.html
           
           echo "✅ Successfully injected Secrets using sed"
       # 3. 登录到 GitHub 镜像仓库 (GHCR)
