@@ -3,51 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>每日随记</title>
+    <title>每日随记 | 语录卡片</title>
     <style>
+        :root {
+            --primary-color: #4a90e2;
+            --text-color: #2c3e50;
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+
         body {
             margin: 0;
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
-            color: #333;
+            background: var(--bg-gradient);
+            font-family: "Optima", "PingFang SC", "Microsoft YaHei", sans-serif;
+            color: var(--text-color);
         }
+
         #quote-container {
-            max-width: 600px;
-            padding: 40px;
-            background: rgba(255, 255, 255, 0.8);
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            text-align: center;
-            backdrop-filter: blur(10px);
-            transition: all 0.5s ease;
+            width: 90%;
+            max-width: 650px;
+            padding: 50px 40px;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.08);
+            backdrop-filter: blur(12px);
+            text-align: center; /* 容器内元素整体居中 */
+            position: relative;
         }
+
+        /* 装饰性的引号 */
+        #quote-container::before {
+            content: "“";
+            position: absolute;
+            top: 20px;
+            left: 30px;
+            font-size: 4rem;
+            color: rgba(74, 144, 226, 0.2);
+            font-family: serif;
+        }
+
         #content {
-            font-size: 1.5rem;
-            line-height: 1.6;
-            margin-bottom: 20px;
+            font-size: 1.3rem;
+            line-height: 1.8;
+            margin-bottom: 30px;
             font-weight: 500;
+            display: inline-block; /* 核心：让文字块宽度自适应 */
+            text-align: left;      /* 核心：文字内部左对齐 */
+            opacity: 1;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            letter-spacing: 0.05em;
         }
+
         #author {
-            font-size: 1.1rem;
-            color: #666;
+            font-size: 1rem;
+            color: #7f8c8d;
+            margin-top: 20px;
+            text-align: right;
             font-style: italic;
         }
-        #btn-refresh {
-            margin-top: 30px;
-            padding: 10px 25px;
-            border: none;
-            background: #4a90e2;
-            color: white;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: background 0.3s;
+
+        .divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, #ddd, transparent);
+            margin: 20px 0;
         }
+
+        #btn-refresh {
+            margin-top: 20px;
+            padding: 12px 30px;
+            border: none;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+        }
+
         #btn-refresh:hover {
             background: #357abd;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
+        }
+
+        #btn-refresh:active {
+            transform: translateY(0);
         }
     </style>
 </head>
@@ -55,6 +99,7 @@
 
 <div id="quote-container">
     <div id="content">正在拨动命运的齿轮...</div>
+    <div class="divider"></div>
     <div id="author"></div>
     <button id="btn-refresh" onclick="fetchQuote()">再换一句</button>
 </div>
@@ -64,27 +109,39 @@
         const contentEl = document.getElementById('content');
         const authorEl = document.getElementById('author');
         
-        // 加上渐隐效果
+        // 切换时的动画效果
         contentEl.style.opacity = 0;
+        contentEl.style.transform = "translateY(10px)";
         
         try {
-            // 注意：这里用相对路径，前提是你的 HTML 放在 static 目录下
             const response = await fetch('/api/quotes/random');
             const data = await response.json();
             
             setTimeout(() => {
-                contentEl.innerText = data.content;
+                // --- 核心逻辑：智能断行处理 ---
+                let rawText = data.content;
+                
+                // 1. 冒号、分号、感叹号、问号、句号后强制换行
+                // 2. 利用正则：如果逗号前面超过12个字符，则在逗号后换行，防止一行太长
+                let formatted = rawText
+                    .replace(/([：；。！？])\s*/g, '$1<br>') 
+                    .replace(/(.{12,})([，])\s*/g, '$1$2<br>');
+
+                contentEl.innerHTML = formatted;
                 authorEl.innerText = data.author ? `—— ${data.author}` : "—— 佚名";
+                
                 contentEl.style.opacity = 1;
-            }, 300);
+                contentEl.style.transform = "translateY(0)";
+            }, 400);
             
         } catch (error) {
-            contentEl.innerText = "暂时无法获取感悟，请稍后再试。";
+            contentEl.innerHTML = "生命就像代码，<br>偶尔也会有 Bug。<br>请稍后再试。";
             contentEl.style.opacity = 1;
+            contentEl.style.transform = "translateY(0)";
         }
     }
 
-    // 页面加载时自动获取一次
+    // 初始化
     window.onload = fetchQuote;
 </script>
 
