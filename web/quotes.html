@@ -5,214 +5,422 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>每日随记 | 语录卡片</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         :root {
-            --primary-color: #5d6d7e;
-            --accent-color: #aeb6bf;
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --accent-color: #f093fb;
             --text-color: #2c3e50;
-            /* 柔和的高级灰蓝色调 */
-            --bg-gradient: linear-gradient(135deg, #eef2f3 0%, #8e9eab 100%);
+            --text-light: #6b7280;
         }
 
         body {
-            margin: 0;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            background: var(--bg-gradient);
-            font-family: "Optima", "Quicksand", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            font-family: "Optima", "PingFang SC", "Microsoft YaHei", sans-serif;
             color: var(--text-color);
             overflow: hidden;
+            position: relative;
+        }
+
+        /* 粒子画布 */
+        #particles-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* 动态背景光晕 */
+        .bg-glow {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.3;
+            animation: float 20s ease-in-out infinite;
+            z-index: 0;
+        }
+
+        .bg-glow-1 {
+            width: 600px;
+            height: 600px;
+            background: var(--primary-color);
+            top: -200px;
+            left: -200px;
+            animation-delay: 0s;
+        }
+
+        .bg-glow-2 {
+            width: 500px;
+            height: 500px;
+            background: var(--secondary-color);
+            bottom: -150px;
+            right: -150px;
+            animation-delay: -7s;
+        }
+
+        .bg-glow-3 {
+            width: 400px;
+            height: 400px;
+            background: var(--accent-color);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: -14s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(50px, -50px) scale(1.1); }
+            50% { transform: translate(-30px, 30px) scale(0.95); }
+            75% { transform: translate(-50px, -30px) scale(1.05); }
         }
 
         #quote-container {
-            width: 85%;
-            max-width: 580px;
-            min-height: 300px;
+            width: 90%;
+            max-width: 720px;
             padding: 60px 50px;
-            background: rgba(255, 255, 255, 0.75);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 30px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            box-shadow:
+                0 25px 60px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                0 0 0 1px rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             text-align: center;
             position: relative;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            transition: all 0.4s ease;
+            z-index: 1;
+            overflow: hidden;
         }
 
-        /* 顶部装饰圆点 */
-        #quote-container::after {
-            content: "";
+        /* 卡片顶部光泽 */
+        #quote-container::before {
+            content: '';
             position: absolute;
-            top: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 6px;
-            height: 6px;
-            background: var(--accent-color);
-            border-radius: 50%;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            animation: pulse 2s infinite;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.03),
+                transparent
+            );
+            animation: shine 6s ease-in-out infinite;
         }
 
-        @keyframes pulse {
-            0% { opacity: 0.4; }
-            50% { opacity: 1; }
-            100% { opacity: 0.4; }
+        @keyframes shine {
+            0% { left: -100%; }
+            50%, 100% { left: 100%; }
         }
 
-        /* 引号修饰 */
+        /* 装饰性引号 */
         .quote-mark {
-            font-family: "Georgia", serif;
-            font-size: 5rem;
             position: absolute;
-            color: rgba(0, 0, 0, 0.05);
-            line-height: 1;
-            user-select: none;
+            font-size: 8rem;
+            font-family: "Georgia", "Times New Roman", serif;
+            opacity: 0.08;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            z-index: -1;
         }
-        .mark-left { top: 20px; left: 30px; }
-        .mark-right { bottom: 80px; right: 30px; }
+
+        .quote-mark-left {
+            top: -30px;
+            left: 20px;
+            transform: rotate(-5deg);
+        }
+
+        .quote-mark-right {
+            bottom: -50px;
+            right: 20px;
+            transform: rotate(180deg) scaleX(-1);
+        }
 
         #content {
-            font-size: 1.4rem;
+            font-size: 1.5rem;
             line-height: 2;
-            margin-bottom: 40px;
+            margin-bottom: 35px;
             font-weight: 400;
             display: inline-block;
-            text-align: justify; /* 左右对齐增强平衡感 */
+            text-align: left;
+            color: #e8e8e8;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
             opacity: 1;
             transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
             letter-spacing: 0.08em;
-            word-break: break-all;
-            position: relative;
-            z-index: 1;
-        }
-
-        /* 强调每一行首字，如果喜欢更素淡的可以删掉此部分 */
-        #content br + span {
-            display: inline-block;
-            margin-top: 10px;
+            max-width: 100%;
         }
 
         #author {
-            font-size: 0.95rem;
-            color: #95a5a6;
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 25px;
             text-align: right;
             font-style: italic;
-            margin-top: 10px;
             letter-spacing: 0.1em;
-            transition: opacity 0.5s ease;
         }
 
         .divider {
-            width: 40px;
-            height: 2px;
-            background: var(--accent-color);
-            margin: 0 auto 30px auto;
-            border-radius: 2px;
-            opacity: 0.5;
+            height: 1px;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.2),
+                transparent
+            );
+            margin: 30px 0;
         }
 
         #btn-refresh {
-            margin-top: 40px;
-            padding: 10px 25px;
-            border: 1px solid rgba(0,0,0,0.1);
-            background: transparent;
-            color: var(--primary-color);
+            margin-top: 30px;
+            padding: 16px 45px;
+            border: none;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
             border-radius: 50px;
-            font-size: 0.85rem;
+            font-size: 1rem;
+            font-weight: 500;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            letter-spacing: 0.1em;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow:
+                0 8px 30px rgba(102, 126, 234, 0.35),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            letter-spacing: 0.15em;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #btn-refresh::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                135deg,
+                rgba(255, 255, 255, 0.2),
+                transparent
+            );
+            opacity: 0;
+            transition: opacity 0.3s;
         }
 
         #btn-refresh:hover {
-            background: var(--primary-color);
-            color: white;
-            transform: scale(1.05);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transform: translateY(-4px) scale(1.02);
+            box-shadow:
+                0 15px 40px rgba(102, 126, 234, 0.45),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        #btn-refresh:hover::before {
+            opacity: 1;
         }
 
         #btn-refresh:active {
-            transform: scale(0.95);
+            transform: translateY(-1px) scale(0.98);
         }
 
-        /* 移动端适配 */
-        @media (max-width: 480px) {
+        /* 加载动画 */
+        .loading {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
             #quote-container {
                 padding: 40px 30px;
-                width: 80%;
+                margin: 20px;
+                width: calc(100% - 40px);
             }
+
             #content {
-                font-size: 1.15rem;
+                font-size: 1.2rem;
+                line-height: 1.8;
+            }
+
+            .quote-mark {
+                font-size: 5rem;
+            }
+
+            #btn-refresh {
+                padding: 14px 35px;
+                font-size: 0.9rem;
+            }
+
+            .bg-glow {
+                opacity: 0.2;
             }
         }
     </style>
 </head>
 <body>
 
+<!-- 动态背景 -->
+<canvas id="particles-canvas"></canvas>
+<div class="bg-glow bg-glow-1"></div>
+<div class="bg-glow bg-glow-2"></div>
+<div class="bg-glow bg-glow-3"></div>
+
 <div id="quote-container">
-    <div class="quote-mark mark-left">“</div>
-    
+    <span class="quote-mark quote-mark-left">"</span>
+    <span class="quote-mark quote-mark-right">"</span>
     <div id="content">正在拨动命运的齿轮...</div>
-    
     <div class="divider"></div>
     <div id="author"></div>
-    
-    <div>
-        <button id="btn-refresh" onclick="fetchQuote()">NEXT</button>
-    </div>
-
-    <div class="quote-mark mark-right">”</div>
+    <button id="btn-refresh" onclick="fetchQuote()">再换一句</button>
 </div>
 
 <script>
+    // 粒子背景效果
+    const canvas = document.getElementById('particles-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+
+    class Particle {
+        constructor() {
+            this.reset();
+        }
+
+        reset() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+            this.size = Math.random() * 2 + 0.5;
+            this.speedX = (Math.random() - 0.5) * 0.5;
+            this.speedY = (Math.random() - 0.5) * 0.5;
+            this.opacity = Math.random() * 0.5 + 0.1;
+        }
+
+        update() {
+            this.x += this.speedX;
+            this.y += this.speedY;
+
+            if (this.x < 0 || this.x > canvas.width ||
+                this.y < 0 || this.y > canvas.height) {
+                this.reset();
+            }
+        }
+
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+            ctx.fill();
+        }
+    }
+
+    function initParticles() {
+        particles = [];
+        const particleCount = Math.min(100, Math.floor((canvas.width * canvas.height) / 15000));
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+    }
+
+    function connectParticles() {
+        for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+                const dx = particles[i].x - particles[j].x;
+                const dy = particles[i].y - particles[j].y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < 150) {
+                    const opacity = (1 - distance / 150) * 0.15;
+                    ctx.beginPath();
+                    ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
+                    ctx.lineWidth = 0.5;
+                    ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y);
+                    ctx.stroke();
+                }
+            }
+        }
+    }
+
+    function animateParticles() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        particles.forEach(particle => {
+            particle.update();
+            particle.draw();
+        });
+
+        connectParticles();
+        requestAnimationFrame(animateParticles);
+    }
+
+    window.addEventListener('resize', () => {
+        resizeCanvas();
+        initParticles();
+    });
+
+    resizeCanvas();
+    initParticles();
+    animateParticles();
+
+    // 获取语录
     async function fetchQuote() {
         const contentEl = document.getElementById('content');
         const authorEl = document.getElementById('author');
-        
-        // 优雅的出场动画
+        const btn = document.getElementById('btn-refresh');
+
+        // 切换时的动画效果
         contentEl.style.opacity = 0;
-        contentEl.style.transform = "translateY(15px) filter(blur(5px))";
-        authorEl.style.opacity = 0;
-        
+        contentEl.style.transform = "translateY(15px)";
+        btn.disabled = true;
+        btn.style.opacity = "0.7";
+
         try {
-            // 这里换成了演示用的示例，实际请换回你的 API 地址
-            // const response = await fetch('/api/quotes/random');
-            // const data = await response.json();
-            
-            // 模拟数据仅供演示
-            const mockData = {
-                content: "与其向往，不如出发。所有的逆境，都是为了成就更好的自己；所有的磨砺，终将闪耀成光。",
-                author: "生活指南"
-            };
-            const data = mockData; 
+            const response = await fetch('/api/quotes/random');
+            const data = await response.json();
 
             setTimeout(() => {
                 let rawText = data.content;
-                
-                // 保持原有的断行逻辑
                 let formatted = rawText
-                    .replace(/([：；。！？])\s*/g, '$1<br>') 
+                    .replace(/([：；。！？])\s*/g, '$1<br>')
                     .replace(/(.{12,})([，])\s*/g, '$1$2<br>');
 
                 contentEl.innerHTML = formatted;
-                authorEl.innerText = data.author ? `— ${data.author} —` : "— 佚名 —";
-                
-                // 入场
+                authorEl.innerText = data.author ? `—— ${data.author}` : "—— 佚名";
+
                 contentEl.style.opacity = 1;
-                contentEl.style.transform = "translateY(0) filter(blur(0))";
-                authorEl.style.opacity = 1;
-            }, 500);
-            
+                contentEl.style.transform = "translateY(0)";
+                btn.disabled = false;
+                btn.style.opacity = "1";
+            }, 400);
+
         } catch (error) {
             contentEl.innerHTML = "生命就像代码，<br>偶尔也会有 Bug。<br>请稍后再试。";
             contentEl.style.opacity = 1;
             contentEl.style.transform = "translateY(0)";
+            btn.disabled = false;
+            btn.style.opacity = "1";
         }
     }
 
