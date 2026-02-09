@@ -6,9 +6,11 @@
     <title>每日随记 | 语录卡片</title>
     <style>
         :root {
-            --primary-color: #4a90e2;
+            --primary-color: #5d6d7e;
+            --accent-color: #aeb6bf;
             --text-color: #2c3e50;
-            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            /* 柔和的高级灰蓝色调 */
+            --bg-gradient: linear-gradient(135deg, #eef2f3 0%, #8e9eab 100%);
         }
 
         body {
@@ -18,90 +20,154 @@
             justify-content: center;
             align-items: center;
             background: var(--bg-gradient);
-            font-family: "Optima", "PingFang SC", "Microsoft YaHei", sans-serif;
+            font-family: "Optima", "Quicksand", "PingFang SC", "Microsoft YaHei", sans-serif;
             color: var(--text-color);
+            overflow: hidden;
         }
 
         #quote-container {
-            width: 90%;
-            max-width: 650px;
-            padding: 50px 40px;
-            background: rgba(255, 255, 255, 0.85);
-            border-radius: 20px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.08);
-            backdrop-filter: blur(12px);
-            text-align: center; /* 容器内元素整体居中 */
+            width: 85%;
+            max-width: 580px;
+            min-height: 300px;
+            padding: 60px 50px;
+            background: rgba(255, 255, 255, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 30px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            text-align: center;
             position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: all 0.4s ease;
         }
 
-        /* 装饰性的引号 */
-        #quote-container::before {
-            content: "“";
+        /* 顶部装饰圆点 */
+        #quote-container::after {
+            content: "";
             position: absolute;
-            top: 20px;
-            left: 30px;
-            font-size: 4rem;
-            color: rgba(74, 144, 226, 0.2);
-            font-family: serif;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 6px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            animation: pulse 2s infinite;
         }
+
+        @keyframes pulse {
+            0% { opacity: 0.4; }
+            50% { opacity: 1; }
+            100% { opacity: 0.4; }
+        }
+
+        /* 引号修饰 */
+        .quote-mark {
+            font-family: "Georgia", serif;
+            font-size: 5rem;
+            position: absolute;
+            color: rgba(0, 0, 0, 0.05);
+            line-height: 1;
+            user-select: none;
+        }
+        .mark-left { top: 20px; left: 30px; }
+        .mark-right { bottom: 80px; right: 30px; }
 
         #content {
-            font-size: 1.3rem;
-            line-height: 1.8;
-            margin-bottom: 30px;
-            font-weight: 500;
-            display: inline-block; /* 核心：让文字块宽度自适应 */
-            text-align: left;      /* 核心：文字内部左对齐 */
+            font-size: 1.4rem;
+            line-height: 2;
+            margin-bottom: 40px;
+            font-weight: 400;
+            display: inline-block;
+            text-align: justify; /* 左右对齐增强平衡感 */
             opacity: 1;
-            transition: opacity 0.5s ease, transform 0.5s ease;
-            letter-spacing: 0.05em;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            letter-spacing: 0.08em;
+            word-break: break-all;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 强调每一行首字，如果喜欢更素淡的可以删掉此部分 */
+        #content br + span {
+            display: inline-block;
+            margin-top: 10px;
         }
 
         #author {
-            font-size: 1rem;
-            color: #7f8c8d;
-            margin-top: 20px;
+            font-size: 0.95rem;
+            color: #95a5a6;
             text-align: right;
             font-style: italic;
+            margin-top: 10px;
+            letter-spacing: 0.1em;
+            transition: opacity 0.5s ease;
         }
 
         .divider {
-            height: 1px;
-            background: linear-gradient(to right, transparent, #ddd, transparent);
-            margin: 20px 0;
+            width: 40px;
+            height: 2px;
+            background: var(--accent-color);
+            margin: 0 auto 30px auto;
+            border-radius: 2px;
+            opacity: 0.5;
         }
 
         #btn-refresh {
-            margin-top: 20px;
-            padding: 12px 30px;
-            border: none;
-            background: var(--primary-color);
-            color: white;
-            border-radius: 25px;
-            font-size: 0.9rem;
+            margin-top: 40px;
+            padding: 10px 25px;
+            border: 1px solid rgba(0,0,0,0.1);
+            background: transparent;
+            color: var(--primary-color);
+            border-radius: 50px;
+            font-size: 0.85rem;
             cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            letter-spacing: 0.1em;
         }
 
         #btn-refresh:hover {
-            background: #357abd;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
+            background: var(--primary-color);
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
 
         #btn-refresh:active {
-            transform: translateY(0);
+            transform: scale(0.95);
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 480px) {
+            #quote-container {
+                padding: 40px 30px;
+                width: 80%;
+            }
+            #content {
+                font-size: 1.15rem;
+            }
         }
     </style>
 </head>
 <body>
 
 <div id="quote-container">
+    <div class="quote-mark mark-left">“</div>
+    
     <div id="content">正在拨动命运的齿轮...</div>
+    
     <div class="divider"></div>
     <div id="author"></div>
-    <button id="btn-refresh" onclick="fetchQuote()">再换一句</button>
+    
+    <div>
+        <button id="btn-refresh" onclick="fetchQuote()">NEXT</button>
+    </div>
+
+    <div class="quote-mark mark-right">”</div>
 </div>
 
 <script>
@@ -109,30 +175,39 @@
         const contentEl = document.getElementById('content');
         const authorEl = document.getElementById('author');
         
-        // 切换时的动画效果
+        // 优雅的出场动画
         contentEl.style.opacity = 0;
-        contentEl.style.transform = "translateY(10px)";
+        contentEl.style.transform = "translateY(15px) filter(blur(5px))";
+        authorEl.style.opacity = 0;
         
         try {
-            const response = await fetch('/api/quotes/random');
-            const data = await response.json();
+            // 这里换成了演示用的示例，实际请换回你的 API 地址
+            // const response = await fetch('/api/quotes/random');
+            // const data = await response.json();
             
+            // 模拟数据仅供演示
+            const mockData = {
+                content: "与其向往，不如出发。所有的逆境，都是为了成就更好的自己；所有的磨砺，终将闪耀成光。",
+                author: "生活指南"
+            };
+            const data = mockData; 
+
             setTimeout(() => {
-                // --- 核心逻辑：智能断行处理 ---
                 let rawText = data.content;
                 
-                // 1. 冒号、分号、感叹号、问号、句号后强制换行
-                // 2. 利用正则：如果逗号前面超过12个字符，则在逗号后换行，防止一行太长
+                // 保持原有的断行逻辑
                 let formatted = rawText
                     .replace(/([：；。！？])\s*/g, '$1<br>') 
                     .replace(/(.{12,})([，])\s*/g, '$1$2<br>');
 
                 contentEl.innerHTML = formatted;
-                authorEl.innerText = data.author ? `—— ${data.author}` : "—— 佚名";
+                authorEl.innerText = data.author ? `— ${data.author} —` : "— 佚名 —";
                 
+                // 入场
                 contentEl.style.opacity = 1;
-                contentEl.style.transform = "translateY(0)";
-            }, 400);
+                contentEl.style.transform = "translateY(0) filter(blur(0))";
+                authorEl.style.opacity = 1;
+            }, 500);
             
         } catch (error) {
             contentEl.innerHTML = "生命就像代码，<br>偶尔也会有 Bug。<br>请稍后再试。";
