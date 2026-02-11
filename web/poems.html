@@ -6,16 +6,15 @@
     <title>每日随记 | 墨韵古诗</title>
     <style>
         :root {
-            --paper-bg: #f4f1de; /* 宣纸色 */
-            --ink-black: #2b2d42; /* 浓墨色 */
-            --accent-red: #8d0801; /* 朱砂色 */
+            --paper-bg: #f4f1de; 
+            --ink-black: #2b2d42; 
+            --accent-red: #8d0801; 
             --text-gray: #5e6472;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            /* 修改1：允许页面纵向滚动，并增加内边距 */
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -27,10 +26,9 @@
             overflow-x: hidden;
             overflow-y: auto; 
             position: relative;
-            padding: 40px 20px;
+            padding: 60px 20px; /* 增加上下间距，确保长诗不顶边 */
         }
 
-        /* 装饰背景文字 */
         .bg-text {
             position: fixed;
             font-size: 15vw;
@@ -43,21 +41,18 @@
         }
 
         #quote-container {
-            width: 90%;
-            max-width: 600px;
-            /* 修改2：让卡片高度自适应，移除溢出隐藏 */
+            width: 95%;
+            max-width: 650px;
             min-height: 300px;
-            padding: 60px 50px;
+            padding: 60px 40px;
             background: var(--paper-bg);
-            box-shadow: 20px 20px 60px rgba(0,0,0,0.1), 
-                        -5px -5px 20px rgba(255,255,255,0.5);
+            box-shadow: 20px 20px 60px rgba(0,0,0,0.1);
             position: relative;
             border: 1px solid rgba(0,0,0,0.05);
             transition: all 0.5s ease;
             margin: auto;
         }
 
-        /* 红色印章装饰 */
         #quote-container::after {
             content: "随记";
             position: absolute;
@@ -90,11 +85,11 @@
             line-height: 2;
             margin-bottom: 30px;
             font-weight: 500;
-            /* 默认为居中 */
-            text-align: center;
+            text-align: center; /* 默认居中 */
             opacity: 1;
-            transition: all 0.8s ease;
+            transition: opacity 0.6s ease, transform 0.6s ease;
             letter-spacing: 0.1em;
+            /* 核心：保留数据库中的换行符 */
             white-space: pre-wrap; 
             word-break: break-all;
         }
@@ -118,7 +113,7 @@
 
         #btn-refresh {
             margin-top: 40px;
-            padding: 10px 30px;
+            padding: 10px 35px;
             border: 1px solid var(--ink-black);
             background: transparent;
             color: var(--ink-black);
@@ -138,8 +133,8 @@
         }
 
         @media (max-width: 600px) {
-            #quote-container { padding: 50px 25px; }
-            #content { font-size: 1.25rem; line-height: 1.8; }
+            #quote-container { padding: 50px 20px; }
+            #content { font-size: 1.2rem; line-height: 1.7; }
         }
     </style>
 </head>
@@ -161,43 +156,40 @@
         const authorEl = document.getElementById('author');
         const btn = document.getElementById('btn-refresh');
 
+        // 切换动画：先淡出
         contentEl.style.opacity = 0;
         contentEl.style.transform = "translateY(10px)";
+        btn.disabled = true;
         
         try {
             const response = await fetch('/api/poems/random');
             const data = await response.json();
 
             setTimeout(() => {
-                let rawText = data.content.trim();
+                const rawText = data.content || "";
                 
-                // --- 逻辑优化：根据长度调整对齐方式 ---
-                if (rawText.length > 50) {
+                // 1. 直接赋值：innerText 会自动将 \n 渲染为换行
+                contentEl.innerText = rawText; 
+
+                // 2. 对齐逻辑：如果包含换行符或是长文本，改为左对齐更易读
+                if (rawText.includes('\n') || rawText.length > 30) {
                     contentEl.style.textAlign = "left";
                 } else {
                     contentEl.style.textAlign = "center";
                 }
 
-                // 分割逻辑
-                let formatted = rawText
-                    .replace(/([。！？；])\s*/g, '$1\n') 
-                    .replace(/([，])(?=[^，。！？；]{12,}[，。！？；])/g, '$1\n'); 
-
-                contentEl.innerText = formatted; 
                 authorEl.innerText = data.author ? `「${data.author}」` : "「佚名」";
 
+                // 展示动画：淡入
                 contentEl.style.opacity = 1;
                 contentEl.style.transform = "translateY(0)";
-            }, 500);
+                btn.disabled = false;
+            }, 400);
 
         } catch (error) {
-            // 模拟长文测试效果（演示用）
-            const testLongText = "春江潮水连海平，海上明月共潮生。";
-            contentEl.innerText = testLongText;
-            contentEl.style.textAlign = "left";
+            contentEl.innerText = "笔墨已尽，稍后再试。";
             contentEl.style.opacity = 1;
-            contentEl.style.transform = "translateY(0)";
-            authorEl.innerText = "「测试文本」";
+            btn.disabled = false;
         }
     }
 
