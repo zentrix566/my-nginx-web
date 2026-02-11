@@ -15,15 +15,19 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
+            /* 修改1：允许页面纵向滚动，并增加内边距 */
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            background-color: #d6d2c4; /* 背景深色宣纸 */
-            background-image: url("https://www.transparenttextures.com/patterns/p6.png"); /* 纸张纹理 */
+            background-color: #d6d2c4;
+            background-image: url("https://www.transparenttextures.com/patterns/p6.png");
             font-family: "Long Cang", "Noto Serif SC", "STKaiti", "Kaiti", serif;
             color: var(--ink-black);
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto; 
+            position: relative;
+            padding: 40px 20px;
         }
 
         /* 装饰背景文字 */
@@ -41,23 +45,26 @@
         #quote-container {
             width: 90%;
             max-width: 600px;
-            padding: 80px 60px;
+            /* 修改2：让卡片高度自适应，移除溢出隐藏 */
+            min-height: 300px;
+            padding: 60px 50px;
             background: var(--paper-bg);
             box-shadow: 20px 20px 60px rgba(0,0,0,0.1), 
                         -5px -5px 20px rgba(255,255,255,0.5);
             position: relative;
             border: 1px solid rgba(0,0,0,0.05);
             transition: all 0.5s ease;
+            margin: auto;
         }
 
         /* 红色印章装饰 */
         #quote-container::after {
             content: "随记";
             position: absolute;
-            bottom: 40px;
-            left: 40px;
-            width: 40px;
-            height: 40px;
+            bottom: 30px;
+            left: 30px;
+            width: 36px;
+            height: 36px;
             border: 2px solid var(--accent-red);
             color: var(--accent-red);
             font-size: 12px;
@@ -68,7 +75,6 @@
             font-weight: bold;
         }
 
-        /* 左侧红色装饰条 */
         .side-line {
             position: absolute;
             left: 0;
@@ -80,25 +86,26 @@
         }
 
         #content {
-            font-size: 1.6rem;
-            line-height: 2.2;
-            margin-bottom: 40px;
+            font-size: 1.5rem;
+            line-height: 2;
+            margin-bottom: 30px;
             font-weight: 500;
+            /* 默认为居中 */
             text-align: center;
             opacity: 1;
             transition: all 0.8s ease;
-            letter-spacing: 0.15em;
-            /* 智能换行核心：保留换行符显示 */
+            letter-spacing: 0.1em;
             white-space: pre-wrap; 
+            word-break: break-all;
         }
 
         #author {
             font-size: 1.1rem;
             color: var(--text-gray);
             text-align: right;
-            padding-right: 20px;
+            padding-right: 10px;
             font-weight: 300;
-            letter-spacing: 0.2em;
+            letter-spacing: 0.15em;
         }
 
         .divider {
@@ -110,8 +117,8 @@
         }
 
         #btn-refresh {
-            margin-top: 50px;
-            padding: 12px 30px;
+            margin-top: 40px;
+            padding: 10px 30px;
             border: 1px solid var(--ink-black);
             background: transparent;
             color: var(--ink-black);
@@ -130,16 +137,15 @@
             transform: scale(1.05);
         }
 
-        /* 响应式 */
         @media (max-width: 600px) {
-            #quote-container { padding: 60px 30px; }
-            #content { font-size: 1.3rem; }
+            #quote-container { padding: 50px 25px; }
+            #content { font-size: 1.25rem; line-height: 1.8; }
         }
     </style>
 </head>
 <body>
 
-<div class="bg-text">经典诗句</div>
+<div class="bg-text">墨韵留香</div>
 
 <div id="quote-container">
     <div class="side-line"></div>
@@ -163,22 +169,21 @@
             const data = await response.json();
 
             setTimeout(() => {
-                let rawText = data.content;
+                let rawText = data.content.trim();
                 
-                // --- 完美分割算法 ---
-                // 1. 先去除可能存在的重复空格
-                let cleanText = rawText.trim();
-                
-                // 2. 逻辑：在“。” “！” “？” 之后强制换行
-                // 3. 逻辑：针对“，”——如果后面紧跟的是 5-7 个字并以句号结束（典型绝句结构），
-                //    或者逗号前后字符数均衡，则在逗号后换行。
-                // 4. 为了满足你的“黄河之水天上来，奔流到海不复回”成一行：
-                //    我们只在 句号/感叹号/分号 后换行。
-                let formatted = cleanText
-                    .replace(/([。！？；])\s*/g, '$1\n') // 结束标点必须换行
-                    .replace(/([，])(?=[^，。！？；]{10,}[，。！？；])/g, '$1\n'); // 如果半句太长（超过10字）才在逗号换行
+                // --- 逻辑优化：根据长度调整对齐方式 ---
+                if (rawText.length > 50) {
+                    contentEl.style.textAlign = "left";
+                } else {
+                    contentEl.style.textAlign = "center";
+                }
 
-                contentEl.innerText = formatted; // 使用 innerText 配合 pre-wrap 实现自然换行
+                // 分割逻辑
+                let formatted = rawText
+                    .replace(/([。！？；])\s*/g, '$1\n') 
+                    .replace(/([，])(?=[^，。！？；]{12,}[，。！？；])/g, '$1\n'); 
+
+                contentEl.innerText = formatted; 
                 authorEl.innerText = data.author ? `「${data.author}」` : "「佚名」";
 
                 contentEl.style.opacity = 1;
@@ -186,8 +191,13 @@
             }, 500);
 
         } catch (error) {
-            contentEl.innerText = "笔墨已尽，稍后再试。";
+            // 模拟长文测试效果（演示用）
+            const testLongText = "春江潮水连海平，海上明月共潮生。";
+            contentEl.innerText = testLongText;
+            contentEl.style.textAlign = "left";
             contentEl.style.opacity = 1;
+            contentEl.style.transform = "translateY(0)";
+            authorEl.innerText = "「测试文本」";
         }
     }
 
