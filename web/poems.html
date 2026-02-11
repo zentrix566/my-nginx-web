@@ -6,9 +6,9 @@
     <title>每日随记 | 墨韵古诗</title>
     <style>
         :root {
-            --paper-bg: #f4f1de; 
-            --ink-black: #2b2d42; 
-            --accent-red: #8d0801; 
+            --paper-bg: #f4f1de; /* 宣纸色 */
+            --ink-black: #2b2d42; /* 浓墨色 */
+            --accent-red: #8d0801; /* 朱砂色 */
             --text-gray: #5e6472;
         }
 
@@ -23,12 +23,14 @@
             background-image: url("https://www.transparenttextures.com/patterns/p6.png");
             font-family: "Long Cang", "Noto Serif SC", "STKaiti", "Kaiti", serif;
             color: var(--ink-black);
+            /* 允许纵向滚动以兼容长诗 */
             overflow-x: hidden;
             overflow-y: auto; 
             position: relative;
-            padding: 60px 20px; /* 增加上下间距，确保长诗不顶边 */
+            padding: 60px 20px;
         }
 
+        /* 装饰背景文字 */
         .bg-text {
             position: fixed;
             font-size: 15vw;
@@ -44,22 +46,24 @@
             width: 95%;
             max-width: 650px;
             min-height: 300px;
-            padding: 60px 40px;
+            padding: 60px 50px;
             background: var(--paper-bg);
-            box-shadow: 20px 20px 60px rgba(0,0,0,0.1);
+            box-shadow: 20px 20px 60px rgba(0,0,0,0.1), 
+                        -5px -5px 20px rgba(255,255,255,0.5);
             position: relative;
             border: 1px solid rgba(0,0,0,0.05);
             transition: all 0.5s ease;
             margin: auto;
         }
 
+        /* 红色印章装饰 */
         #quote-container::after {
             content: "随记";
             position: absolute;
             bottom: 30px;
             left: 30px;
-            width: 36px;
-            height: 36px;
+            width: 38px;
+            height: 38px;
             border: 2px solid var(--accent-red);
             color: var(--accent-red);
             font-size: 12px;
@@ -85,11 +89,11 @@
             line-height: 2;
             margin-bottom: 30px;
             font-weight: 500;
-            text-align: center; /* 默认居中 */
+            text-align: center;
             opacity: 1;
-            transition: opacity 0.6s ease, transform 0.6s ease;
-            letter-spacing: 0.1em;
-            /* 核心：保留数据库中的换行符 */
+            transition: all 0.6s ease;
+            letter-spacing: 0.12em;
+            /* 关键：保留换行符并支持自动换行 */
             white-space: pre-wrap; 
             word-break: break-all;
         }
@@ -113,7 +117,7 @@
 
         #btn-refresh {
             margin-top: 40px;
-            padding: 10px 35px;
+            padding: 12px 35px;
             border: 1px solid var(--ink-black);
             background: transparent;
             color: var(--ink-black);
@@ -124,6 +128,7 @@
             display: block;
             margin-left: auto;
             margin-right: auto;
+            outline: none;
         }
 
         #btn-refresh:hover {
@@ -132,9 +137,14 @@
             transform: scale(1.05);
         }
 
+        #btn-refresh:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         @media (max-width: 600px) {
-            #quote-container { padding: 50px 20px; }
-            #content { font-size: 1.2rem; line-height: 1.7; }
+            #quote-container { padding: 50px 25px; }
+            #content { font-size: 1.25rem; line-height: 1.8; }
         }
     </style>
 </head>
@@ -156,7 +166,7 @@
         const authorEl = document.getElementById('author');
         const btn = document.getElementById('btn-refresh');
 
-        // 切换动画：先淡出
+        // 切换前的视觉效果
         contentEl.style.opacity = 0;
         contentEl.style.transform = "translateY(10px)";
         btn.disabled = true;
@@ -166,21 +176,21 @@
             const data = await response.json();
 
             setTimeout(() => {
-                const rawText = data.content || "";
+                // 处理可能被转义的 \n 字符
+                let formattedText = (data.content || "").replace(/\\n/g, '\n').trim();
                 
-                // 1. 直接赋值：innerText 会自动将 \n 渲染为换行
-                contentEl.innerText = rawText; 
+                // 设置文本内容
+                contentEl.innerText = formattedText; 
+                authorEl.innerText = data.author ? `「${data.author}」` : "「佚名」";
 
-                // 2. 对齐逻辑：如果包含换行符或是长文本，改为左对齐更易读
-                if (rawText.includes('\n') || rawText.length > 30) {
+                // 动态对齐逻辑：如果有手动换行或者是长篇，则左对齐；短句则居中
+                if (formattedText.includes('\n') || formattedText.length > 30) {
                     contentEl.style.textAlign = "left";
                 } else {
                     contentEl.style.textAlign = "center";
                 }
 
-                authorEl.innerText = data.author ? `「${data.author}」` : "「佚名」";
-
-                // 展示动画：淡入
+                // 恢复视觉效果
                 contentEl.style.opacity = 1;
                 contentEl.style.transform = "translateY(0)";
                 btn.disabled = false;
@@ -188,11 +198,13 @@
 
         } catch (error) {
             contentEl.innerText = "笔墨已尽，稍后再试。";
+            contentEl.style.textAlign = "center";
             contentEl.style.opacity = 1;
             btn.disabled = false;
         }
     }
 
+    // 页面加载完成后自动触发一次
     window.onload = fetchQuote;
 </script>
 
