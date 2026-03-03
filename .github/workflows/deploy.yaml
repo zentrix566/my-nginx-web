@@ -4,7 +4,7 @@ on:
   push:
     branches: [ "main" ]  # 只有 main 分支提交时触发
   schedule:
-    - cron: '0 22 * * *'  # 每天北京时间早上 6 点自动运行 (UTC 22:00)
+    # - cron: '0 22 * * *'  # 每天北京时间早上 6 点自动运行 (UTC 22:00)
   workflow_dispatch:      # 允许手动在 GitHub 页面点击运行
 
 env:
